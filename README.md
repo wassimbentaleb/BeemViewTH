@@ -60,7 +60,7 @@ lib/
   core/validators.dart       Email and password rules.
   core/app_config.dart       API origin and tenant configuration.
   core/api_exception.dart    Useful API errors with HTTP status codes.
-  models/                    Typed user, login session and project data.
+  models/                    Typed user, login session, project and task data.
   services/                  HTTP, authentication, project pages and token storage.
   controllers/               Session and projects state, loading and errors.
   screens/                   Login, session check, Projects and task destination.
@@ -70,6 +70,9 @@ lib/
 The request flow is **screen -> controller -> service -> API**. Screens
 display state; controllers manage loading and errors; services call endpoints;
 models turn response JSON into Dart objects.
+
+`Task` normalizes list/detail date keys and priority casing, keeps optional dates
+nullable, and preserves unfamiliar status labels. Numeric progress is ignored.
 
 `AuthController` and `ProjectsController` use Flutter's `ChangeNotifier`;
 `ListenableBuilder` rebuilds the interface when their state changes.
