@@ -9,6 +9,16 @@ class TaskService {
 
   final ApiClient client;
 
+  Future<void> updateStatus(int taskId, String status) async {
+    // On modifie seulement le status documente; ni priorite ni pourcentage.
+    if (taskId <= 0) throw ArgumentError('Task ID must be positive.');
+    if (!Task.statusLabels.containsKey(status)) {
+      throw ArgumentError('Unknown task status.');
+    }
+    // Le succes HTTP confirme l'ecriture; un nouveau GET relira ensuite la fiche.
+    await client.put('/api/tasks/$taskId', {'status': status});
+  }
+
   Future<TaskDetails> fetchTaskDetails(int taskId) async {
     // L'ID est celui de la carte choisie, sans parametre de filtre ni modification.
     if (taskId <= 0) throw ArgumentError('Task ID must be positive.');
