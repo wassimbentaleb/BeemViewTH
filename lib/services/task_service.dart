@@ -9,6 +9,18 @@ class TaskService {
 
   final ApiClient client;
 
+  Future<void> addComment(int taskId, String note) async {
+    // La note devient un commentaire independant, sans mention utilisateur.
+    if (taskId <= 0) throw ArgumentError('Task ID must be positive.');
+    final content = note.trim();
+    if (content.isEmpty) throw ArgumentError('Comment must not be empty.');
+    await client.post('/api/tasks/comment', {
+      'task_id': taskId,
+      'content': content,
+      'mentioned_user_ids': <int>[],
+    });
+  }
+
   Future<void> updateStatus(int taskId, String status) async {
     // On modifie seulement le status documente; ni priorite ni pourcentage.
     if (taskId <= 0) throw ArgumentError('Task ID must be positive.');
