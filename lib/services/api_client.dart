@@ -62,12 +62,27 @@ class ApiClient {
         body: jsonEncode(body),
       ),
       authenticated: authenticated,
+      isWrite: authenticated,
+    );
+  }
+
+  Future<Map<String, dynamic>> put(String path, Map<String, dynamic> body) {
+    // PUT partage JSON, Bearer, timeout et gestion de session avec les lectures.
+    return _readResponse(
+      _client.put(
+        _origin.resolve(path),
+        headers: _headers(true),
+        body: jsonEncode(body),
+      ),
+      authenticated: true,
+      isWrite: true,
     );
   }
 
   Future<Map<String, dynamic>> _readResponse(
     Future<http.Response> request, {
     required bool authenticated,
+    bool isWrite = false,
   }) async {
     // Le delai couvre la requete et la lecture de sa reponse.
     try {
@@ -89,18 +104,30 @@ class ApiClient {
           token = null;
           await onUnauthorized?.call();
         }
-        throw ApiException.fromResponse(response.statusCode, data ?? {});
+        throw ApiException.fromResponse(
+          response.statusCode,
+          data ?? {},
+          // Un 5xx peut arriver apres une modification deja appliquee au serveur.
+          outcomeUnknown: isWrite && response.statusCode >= 500,
+        );
       }
       if (data == null) {
-        throw const ApiException('The server returned an unexpected response.');
+        throw ApiException(
+          'The server returned an unexpected response.',
+          outcomeUnknown: isWrite,
+        );
       }
       return data;
     } on TimeoutException {
       // Pas de retry automatique: l'utilisateur decide quand reessayer.
-      throw const ApiException('The request timed out. Please try again.');
+      throw ApiException(
+        'The request timed out. Please try again.',
+        outcomeUnknown: isWrite,
+      );
     } on http.ClientException {
-      throw const ApiException(
+      throw ApiException(
         'Could not connect. Check your internet connection.',
+        outcomeUnknown: isWrite,
       );
     }
   }

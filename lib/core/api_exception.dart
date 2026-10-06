@@ -1,11 +1,22 @@
 // Une erreur lisible pour l'interface, avec son code HTTP quand il existe.
 class ApiException implements Exception {
-  const ApiException(this.message, {this.statusCode});
+  const ApiException(
+    this.message, {
+    this.statusCode,
+    this.outcomeUnknown = false,
+  });
 
   final String message;
   final int? statusCode;
 
-  factory ApiException.fromResponse(int statusCode, Map<String, dynamic> data) {
+  // Sans confirmation d'une ecriture, renvoyer une note pourrait la dupliquer.
+  final bool outcomeUnknown;
+
+  factory ApiException.fromResponse(
+    int statusCode,
+    Map<String, dynamic> data, {
+    bool outcomeUnknown = false,
+  }) {
     // On utilise le message du serveur, sans dependre d'un texte exact.
     final error = data['error'];
     final message = data['message'];
@@ -39,7 +50,11 @@ class ApiException implements Exception {
         text = '$text ${messages.join(' ')}';
       }
     }
-    return ApiException(text, statusCode: statusCode);
+    return ApiException(
+      text,
+      statusCode: statusCode,
+      outcomeUnknown: outcomeUnknown,
+    );
   }
 
   @override
