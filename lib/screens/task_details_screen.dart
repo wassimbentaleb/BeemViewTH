@@ -12,6 +12,7 @@ import '../models/user.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_badges.dart';
+import 'update_status_screen.dart';
 
 // Charge les informations actuelles de la task choisie dans la liste.
 class TaskDetailsScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class TaskDetailsScreen extends StatefulWidget {
 
 class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   late final TaskDetailsController _details;
+  bool _openingStatus = false;
 
   @override
   void initState() {
@@ -63,6 +65,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           scrolledUnderElevation: 0,
         ),
         // Le fond discret, les titres et les panneaux suivent la maquette Details.
+        bottomNavigationBar: _buildStatusAction(),
         body: DecoratedBox(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -91,6 +94,50 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
         ),
       ),
     );
+  }
+
+  Widget? _buildStatusAction() {
+    // L'action n'est disponible qu'apres une lecture reussie de la fiche actuelle.
+    if (_details.isLoading ||
+        _details.error != null ||
+        _details.details == null) {
+      return null;
+    }
+    return SafeArea(
+      top: false,
+      child: Align(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+            child: FilledButton.icon(
+              onPressed: () => unawaited(_openStatus()),
+              iconAlignment: IconAlignment.end,
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: const Text('Update status'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openStatus() async {
+    // Un double toucher ne doit pas ouvrir deux destinations.
+    final task = _details.details?.task;
+    if (_openingStatus ||
+        _details.isLoading ||
+        _details.error != null ||
+        task == null) {
+      return;
+    }
+    _openingStatus = true;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (context) => UpdateStatusScreen(task: task)),
+    );
+    // Cette destination ne modifie rien pour le moment: retour sans nouvelle lecture.
+    if (mounted) _openingStatus = false;
   }
 
   List<Widget> _buildContent() {

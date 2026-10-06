@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:beemview/app.dart';
 import 'package:beemview/controllers/auth_controller.dart';
 import 'package:beemview/core/date_formatter.dart';
+import 'package:beemview/screens/update_status_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -45,6 +46,41 @@ Future<void> openDetails(WidgetTester tester, AuthController auth) async {
 }
 
 void main() {
+  testWidgets(
+    'Update status receives fresh detail values and Back preserves the loaded fiche',
+    (tester) async {
+      // La carte etait To do; Details a renvoye In progress. Aucune ecriture ne doit etre envoyee.
+      var calls = 0;
+      final auth = createDetailSession((request) async {
+        expect(request.method, 'GET');
+        calls++;
+        return http.Response(detailResponse, 200);
+      });
+      await openDetails(tester, auth);
+      await tester.pumpAndSettle();
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Update status'),
+      );
+      await tester.tap(find.text('Update status'));
+      button.onPressed!();
+      await tester.pumpAndSettle();
+      final screen = tester.widget<UpdateStatusScreen>(
+        find.byType(UpdateStatusScreen),
+      );
+      expect(screen.task.id, 501);
+      expect(screen.task.name, 'Updated inspection');
+      expect(screen.task.status, 'in_progress');
+      expect(find.text('Current status: In progress'), findsOneWidget);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(UpdateStatusScreen), findsNothing);
+      expect(find.text('Inspect the assigned site.'), findsOneWidget);
+      expect(calls, 1);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   for (final status in [401, 403, 404]) {
     testWidgets(
       'detail HTTP $status handles recovery session and open routes',
@@ -241,6 +277,7 @@ void main() {
       });
       await openDetails(tester, auth);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Update status'), findsNothing);
       response.complete(http.Response(detailResponse, 200));
       await tester.pumpAndSettle();
       expect(find.text('Updated inspection'), findsOneWidget);

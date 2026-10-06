@@ -1,4 +1,4 @@
-// Donnees de la liste Tasks, independantes de Flutter et des appels HTTP.
+// Donnees communes a la liste et aux details Tasks, independantes de Flutter et de HTTP.
 class Task {
   const Task({
     required this.id,

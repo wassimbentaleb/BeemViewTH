@@ -48,6 +48,10 @@ comments, rather than a complete history.
 Detail read failures offer Retry and return to Tasks. A 404 shows Task not found
 with a direct return action. A protected 401 clears the session and all open
 routes; 403 preserves it. Duplicate reads and responses after disposal are guarded.
+The Update status button stays accessible at the bottom after a successful read.
+It passes the fresh task ID/status to the next destination and prevents duplicate
+navigation. That destination currently shows an unavailable message; saving a
+status and posting an optional comment belong to step 7.
 
 ## Run
 
@@ -88,8 +92,8 @@ lib/
   models/                    Typed user, login session, project and task data.
   services/                  HTTP, authentication, project/task reads and token storage.
   controllers/               Session, projects and tasks state, loading and errors.
-  screens/                   Login, session check, Projects, Tasks and detail destination.
-  widgets/                   Brand logo and tappable project/task cards.
+  screens/                   Login, session check, Projects, Tasks, Details and status destination.
+  widgets/                   Brand logo, project/task cards and shared task badges.
 ```
 
 The request flow is **screen -> controller -> service -> API**. Screens
@@ -106,7 +110,7 @@ no server search, status parameters or task pagination are used.
 Its `fetchTaskDetails` method reads `/api/tasks/:id` from the `task` envelope,
 checks the returned ID and reports malformed data as a read failure.
 
-`AuthController`, `ProjectsController` and `TasksController` use Flutter's `ChangeNotifier`;
+Session, project, task-list and task-detail controllers use Flutter's `ChangeNotifier`;
 `ListenableBuilder` rebuilds the interface when their state changes.
 Password visibility uses local `setState`
 because it only affects the form. Changing the authenticated user also resets
@@ -136,7 +140,7 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All 44 tests pass and `flutter analyze` reports no issues.
+All 64 tests pass and `flutter analyze` reports no issues.
 The tests cover validation, compact layout, password visibility, request
 payloads, profile parsing, duplicate submissions, token storage, restoration,
 401 versus 403, retained input on API failure, successful login and sign-out.
@@ -149,8 +153,12 @@ status filters combined with case-insensitive name search, duplicate loading,
 late responses after disposal, empty projects versus empty search results,
 Retry after network/403 errors, 401 route removal, keyboard layout with enlarged
 text, task selection, double taps and preserved filters on return.
+Detail tests check optional description/project/assignees/dates, the task envelope
+and returned ID, latest comment selection in an unordered response, missing author
+or timestamps, guarded loads, late success/error after disposal, 401/403/404,
+network retry, long text on a narrow screen, and fresh data passed to status navigation.
 HTTP and storage are simulated in these tests. The real login/profile and
-project-list and project-task APIs have also been checked with the supplied test account.
+project-list, project-task and task-detail APIs have also been checked with the supplied test account.
 
 The debug APK was built and installed on an Android API 36 emulator. Real form
 login, session restoration after a full app restart, and sign-out were verified
@@ -166,5 +174,12 @@ both filters, task selection and preserved search/status on return were checked
 on Android. The screen was visually inspected against the supplied design.
 No task status or comment was changed during step 5.
 
-Task Details and Update Status are not implemented yet. There is no refresh-token or
+For Task Details, the updated APK restored the session and loaded the selected
+task's description, project, priority and dates. The supplied task had no
+assignees or returned comments, so both empty values were checked on Android.
+Scrolling, the fixed Update status action, its current task/status destination
+and return to the same detail fiche were verified. Multiple assignees and latest
+comment selection were checked with simulated responses. No task writes occurred.
+
+Update Status saving and optional comments are not implemented yet. There is no refresh-token or
 server logout endpoint in the assignment contract.
