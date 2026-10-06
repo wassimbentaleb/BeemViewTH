@@ -22,6 +22,82 @@ ProjectsController createController(
 }
 
 void main() {
+  test(
+    'failed initial load retries offset zero and clears the error',
+    () async {
+      // Une premiere erreur ne rend pas le controller inutilisable.
+      final offsets = <String>[];
+      final controller = createController((request) async {
+        offsets.add(request.url.queryParameters['offset']!);
+        return offsets.length == 1
+            ? http.Response('{"message":"Temporary server error"}', 500)
+            : http.Response(
+                '{"data":[{"id":101,"name":"First"}],"total":1}',
+                200,
+              );
+      });
+      addTearDown(controller.dispose);
+      await controller.loadProjects();
+      expect(controller.error, 'Temporary server error');
+      expect(controller.projects, isEmpty);
+      expect(controller.isLoading, isFalse);
+      await controller.loadProjects();
+      expect(controller.error, isNull);
+      expect(controller.projects.single.id, 101);
+      expect(offsets, ['0', '0']);
+    },
+  );
+
+  test('failed next page keeps projects and retries the same offset', () async {
+    // L'offset ne change pas sur erreur, sinon une page serait sautee au retry.
+    final offsets = <String>[];
+    final controller = createController((request) async {
+      final offset = request.url.queryParameters['offset']!;
+      offsets.add(offset);
+      if (offsets.length == 2) {
+        return http.Response('{"message":"Temporary server error"}', 500);
+      }
+      return http.Response(
+        jsonEncode({
+          'data': [
+            {'id': offset == '0' ? 101 : 102, 'name': 'Project'},
+          ],
+          'total': 2,
+        }),
+        200,
+      );
+    });
+    addTearDown(controller.dispose);
+    await controller.loadProjects();
+    await controller.loadMore();
+    expect(controller.projects.single.id, 101);
+    expect(controller.hasMore, isTrue);
+    expect(controller.isLoadingMore, isFalse);
+    expect(controller.error, 'Temporary server error');
+    await controller.loadMore();
+    expect(controller.projects.map((project) => project.id), [101, 102]);
+    expect(controller.error, isNull);
+    expect(offsets, ['0', '1', '1']);
+  });
+
+  test('an empty next page ends pagination without clearing existing cards', () async {
+    // Le total peut changer entre deux appels; une page vide termine la liste.
+    var calls = 0;
+    final controller = createController((request) async {
+      calls++;
+      return calls == 1
+          ? http.Response('{"data":[{"id":101,"name":"First"}],"total":3}', 200)
+          : http.Response('{"result":[],"count":0}', 200);
+    });
+    addTearDown(controller.dispose);
+    await controller.loadProjects();
+    await controller.loadMore();
+    expect(controller.projects.single.id, 101);
+    expect(controller.hasMore, isFalse);
+    await controller.loadMore();
+    expect(calls, 2);
+  });
+
   test('pagination deduplicates IDs and advances by raw page length', () async {
     // La seconde page reste en attente pour verifier le verrou des doubles clics.
     final secondPage = Completer<http.Response>();

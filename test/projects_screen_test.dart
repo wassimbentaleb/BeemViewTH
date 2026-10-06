@@ -42,6 +42,119 @@ AuthController createController(
 
 void main() {
   testWidgets(
+    'empty projects show Reload then replace the empty state on success',
+    (tester) async {
+      // Le format result/count du contrat est visible comme un vrai etat vide.
+      var calls = 0;
+      final controller = createController((request) async {
+        calls++;
+        return calls == 1
+            ? http.Response('{"result":[],"count":0}', 200)
+            : http.Response(
+                '{"data":[{"id":101,"name":"Assigned project"}],"total":1}',
+                200,
+              );
+      });
+      await tester.pumpWidget(BeemViewApp(authController: controller));
+      await tester.pumpAndSettle();
+      expect(find.text('No projects yet'), findsOneWidget);
+      expect(find.text('Load more'), findsNothing);
+      await tester.tap(find.text('Reload'));
+      await tester.pumpAndSettle();
+      expect(find.text('Assigned project'), findsOneWidget);
+      expect(find.text('No projects yet'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'failed pagination keeps cards and Retry loads the missing page',
+    (tester) async {
+      // Retry doit etre une action visible, avec les anciennes cartes toujours presentes.
+      final offsets = <String>[];
+      final controller = createController((request) async {
+        final offset = request.url.queryParameters['offset']!;
+        offsets.add(offset);
+        if (offsets.length == 2) {
+          return http.Response('{"message":"Try again later"}', 500);
+        }
+        return http.Response(
+          jsonEncode({
+            'data': [
+              {
+                'id': offset == '0' ? 101 : 102,
+                'name': offset == '0' ? 'Assigned project' : 'Next project',
+              },
+            ],
+            'total': 2,
+          }),
+          200,
+        );
+      });
+      await tester.pumpWidget(BeemViewApp(authController: controller));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Load more'));
+      await tester.pumpAndSettle();
+      expect(find.text('Assigned project'), findsOneWidget);
+      expect(find.text('Try again later'), findsOneWidget);
+      await tester.ensureVisible(find.text('Retry'));
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.text('Next project'), findsOneWidget);
+      expect(find.text('Try again later'), findsNothing);
+      expect(offsets, ['0', '1', '1']);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('403 shows Retry and retains the session', (tester) async {
+    // Acces refuse ne doit pas etre transforme en token expire.
+    var calls = 0;
+    final controller = createController((request) async {
+      calls++;
+      return calls == 1
+          ? http.Response('{"message":"Access denied"}', 403)
+          : http.Response(
+              '{"data":[{"id":101,"name":"Assigned project"}],"total":1}',
+              200,
+            );
+    });
+    await tester.pumpWidget(BeemViewApp(authController: controller));
+    await tester.pumpAndSettle();
+    expect(find.text('Access denied'), findsOneWidget);
+    expect(controller.user, isNotNull);
+    expect(await controller.store.readToken(), 'test-token');
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(find.text('Assigned project'), findsOneWidget);
+    expect(find.text('Access denied'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('401 on Projects returns to Login and clears the saved token', (
+    tester,
+  ) async {
+    // L'integration verifie le callback session et le controller ferme pendant l'appel.
+    final controller = createController(
+      (request) async => http.Response('{"message":"Expired"}', 401),
+    );
+    await tester.pumpWidget(BeemViewApp(authController: controller));
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(
+      find.text('Your session has expired. Please sign in again.'),
+      findsOneWidget,
+    );
+    expect(controller.user, isNull);
+    expect(await controller.store.readToken(), isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
     'load more keeps cards visible and disappears after the final page',
     (tester) async {
       // Une vraie action UI attend la seconde page et bloque un nouvel envoi.

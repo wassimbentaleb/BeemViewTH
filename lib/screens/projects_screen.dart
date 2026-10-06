@@ -159,7 +159,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       );
     }
     if (_projects.error != null && _projects.projects.isEmpty) {
-      return Text(_projects.error!);
+      // Un echec initial propose un nouvel essai de la premiere page.
+      return Semantics(
+        liveRegion: true,
+        child: _buildMessage(
+          icon: Icons.cloud_off_outlined,
+          title: 'Could not load projects',
+          message: _projects.error!,
+          onRetry: _projects.loadProjects,
+        ),
+      );
+    }
+    if (_projects.projects.isEmpty) {
+      // Zero projet est un resultat valide; Reload permet de verifier un nouvel acces.
+      return _buildMessage(
+        icon: Icons.folder_off_outlined,
+        title: 'No projects yet',
+        message: 'You do not have any accessible projects.',
+        onRetry: _projects.loadProjects,
+        actionLabel: 'Reload',
+      );
     }
     // Les couleurs sont decoratives; les noms et IDs viennent toujours de l'API.
     const colors = [AppColors.primary, Color(0xFF00B88D), AppColors.amber];
@@ -175,7 +194,18 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ),
           ),
         // La page suivante conserve les cartes et desactive le bouton pendant l'appel.
-        if (_projects.hasMore) ...[
+        if (_projects.error != null)
+          // Un echec de pagination conserve les cartes et le meme offset pour Retry.
+          Semantics(
+            liveRegion: true,
+            child: _buildMessage(
+              icon: Icons.cloud_off_outlined,
+              title: 'Could not load more projects',
+              message: _projects.error!,
+              onRetry: _projects.loadMore,
+            ),
+          )
+        else if (_projects.hasMore) ...[
           const SizedBox(height: 4),
           OutlinedButton.icon(
             onPressed: _projects.isLoadingMore ? null : _projects.loadMore,
@@ -204,6 +234,51 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildMessage({
+    required IconData icon,
+    required String title,
+    required String message,
+    required VoidCallback onRetry,
+    String actionLabel = 'Retry',
+  }) {
+    // Les etats vide et erreur partagent un petit panneau lisible avec une action.
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(icon, size: 36, color: AppColors.muted),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 16,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: Text(actionLabel),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -18,7 +18,9 @@ Retry or an explicit return to login. Signing out clears the local session.
 The authenticated Projects screen loads projects in pages of ten and shows the
 user's name. Load more appends the next page, replaces duplicate IDs, blocks
 duplicate requests and disappears after the final page. Its avatar opens the
-account menu with Sign out. Project selection and task screens follow later.
+account menu with Sign out. Empty results show Reload; request failures show
+Retry. A failed next page keeps the loaded cards and retries the same offset.
+Project selection and task screens follow later.
 
 ## Run
 
@@ -100,7 +102,8 @@ The tests cover validation, compact layout, password visibility, request
 payloads, profile parsing, duplicate submissions, token storage, restoration,
 401 versus 403, retained input on API failure, successful login and sign-out.
 Project tests also check data mapping, response envelopes, bearer headers,
-pagination parameters, loading and long names with enlarged text.
+pagination parameters, duplicate IDs, retained cards on retry, empty states,
+401/403 session behavior, loading and long names with enlarged text.
 HTTP and storage are simulated in these tests. The real login/profile and
 project-list APIs have also been checked with the supplied test account.
 
