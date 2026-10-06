@@ -73,6 +73,9 @@ models turn response JSON into Dart objects.
 
 `Task` normalizes list/detail date keys and priority casing, keeps optional dates
 nullable, and preserves unfamiliar status labels. Numeric progress is ignored.
+`TaskService` reads the `tasks` array from `/api/tasks/project/:projectId` using
+the shared authenticated client. This endpoint returns the whole collection;
+no server search, status parameters or task pagination are used.
 
 `AuthController` and `ProjectsController` use Flutter's `ChangeNotifier`;
 `ListenableBuilder` rebuilds the interface when their state changes.
