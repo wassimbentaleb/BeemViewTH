@@ -34,8 +34,8 @@ Retry preserves the entered search and selected status. A task API 401 returns
 to Login and clears the session; 403 leaves the session available for retry.
 Selecting a task passes its ID and project to the Task Details destination;
 double taps open only one route. Returning retains the loaded tasks, search and
-status filter. Details currently show an unavailable message; their API and
-full content belong to step 6.
+status filter. Details fetch the current task name, status, priority and
+description from the API; missing descriptions have a clear empty value.
 
 ## Run
 

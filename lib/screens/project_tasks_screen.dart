@@ -267,11 +267,14 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
     if (_openingTask || _tasks.isLoading) return;
     _openingTask = true;
     FocusScope.of(context).unfocus();
-    // On transmet le bon ID et le projet; l'API Details sera ajoutee a l'etape 6.
+    // On transmet le bon ID, le projet et le service partage pour lire la fiche actuelle.
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (context) =>
-            TaskDetailsScreen(task: task, project: widget.project),
+        builder: (context) => TaskDetailsScreen(
+          task: task,
+          project: widget.project,
+          service: widget.service,
+        ),
       ),
     );
     // Le retour garde ce controller, son texte et son filtre sans nouveau GET.

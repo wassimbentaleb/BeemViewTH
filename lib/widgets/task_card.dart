@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 import '../models/task.dart';
+import 'task_badges.dart';
 
 // Affiche les informations demandees pour une task de la collection API.
 class TaskCard extends StatelessWidget {
@@ -12,22 +13,6 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Les couleurs de presentation restent dans le widget, pas dans le model.
-    final statusColor = switch (task.status) {
-      'in_progress' => const Color(0xFF007AF5),
-      'done' => const Color(0xFF07824F),
-      'blocked' => const Color(0xFFE83232),
-      'on_hold' => const Color(0xFFC18400),
-      'review' || 'changes_requested' => const Color(0xFF7755B5),
-      _ => AppColors.muted,
-    };
-    final priorityColor = switch (task.priority) {
-      'urgent' => const Color(0xFFE83232),
-      'high' => const Color(0xFFF48B00),
-      'medium' => const Color(0xFFD49B00),
-      'low' => const Color(0xFF27A980),
-      _ => AppColors.muted,
-    };
     // La carte annonce son action et affiche un retour visuel au toucher.
     return Material(
       color: Colors.white,
@@ -67,19 +52,8 @@ class TaskCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              // Wrap laisse les badges passer a la ligne lorsque le texte est agrandi.
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _TaskBadge(label: task.statusLabel, color: statusColor),
-                  _TaskBadge(
-                    label: task.priorityLabel,
-                    color: priorityColor,
-                    showDot: true,
-                  ),
-                ],
-              ),
+              // Les memes badges sont reutilises dans l'ecran Details.
+              TaskBadges(task: task),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -128,42 +102,5 @@ class TaskCard extends StatelessWidget {
       'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
-}
-
-// Petit badge prive partage par status et priorite dans la carte.
-class _TaskBadge extends StatelessWidget {
-  const _TaskBadge({
-    required this.label,
-    required this.color,
-    this.showDot = false,
-  });
-
-  final String label;
-  final Color color;
-  final bool showDot;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Text.rich(
-        TextSpan(
-          children: [
-            if (showDot) const TextSpan(text: '\u25cf  '),
-            TextSpan(text: label),
-          ],
-        ),
-        style: TextStyle(
-          color: color,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
   }
 }

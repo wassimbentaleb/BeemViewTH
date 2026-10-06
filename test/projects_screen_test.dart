@@ -18,6 +18,7 @@ import 'package:http/testing.dart';
 AuthController createController(
   Future<http.Response> Function(http.Request) projects, {
   Future<http.Response> Function(http.Request)? tasks,
+  Future<http.Response> Function(http.Request)? details,
 }) {
   const config = AppConfig(subdomain: 'test-tenant');
   FlutterSecureStorage.setMockInitialValues({
@@ -34,6 +35,18 @@ AuthController createController(
         return tasks == null
             ? http.Response('{"tasks":[]}', 200)
             : tasks(request);
+      }
+      // Les tests de selection peuvent fournir leur propre reponse Details.
+      if (RegExp(r'^/api/tasks/\d+$').hasMatch(request.url.path)) {
+        final id = int.parse(request.url.path.split('/').last);
+        return details == null
+            ? http.Response(
+                jsonEncode({
+                  'task': {'id': id, 'name': 'Loaded task'},
+                }),
+                200,
+              )
+            : details(request);
       }
       expect(request.url.path, '/api/projects');
       return projects(request);
