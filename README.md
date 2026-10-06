@@ -45,6 +45,9 @@ returned timestamp determines the selection; if none are usable, the first
 returned comment is shown. Empty responses show No comments available. Only
 the returned comments are considered; this endpoint provides up to ten recent
 comments, rather than a complete history.
+Detail read failures offer Retry and return to Tasks. A 404 shows Task not found
+with a direct return action. A protected 401 clears the session and all open
+routes; 403 preserves it. Duplicate reads and responses after disposal are guarded.
 
 ## Run
 

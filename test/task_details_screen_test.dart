@@ -45,6 +45,122 @@ Future<void> openDetails(WidgetTester tester, AuthController auth) async {
 }
 
 void main() {
+  for (final status in [401, 403, 404]) {
+    testWidgets(
+      'detail HTTP $status handles recovery session and open routes',
+      (tester) async {
+        // Une session expiree, un acces refuse et une task absente demandent des actions differentes.
+        var calls = 0;
+        final auth = createDetailSession((request) async {
+          calls++;
+          return calls == 1
+              ? http.Response('{"message":"Detail unavailable"}', status)
+              : http.Response(detailResponse, 200);
+        });
+        await openDetails(tester, auth);
+        await tester.pumpAndSettle();
+        if (status == 401) {
+          expect(find.text('Welcome back'), findsOneWidget);
+          expect(await auth.store.readToken(), isNull);
+          expect(
+            Navigator.of(tester.element(find.text('Welcome back'))).canPop(),
+            isFalse,
+          );
+        } else if (status == 403) {
+          expect(find.text('Could not load task details'), findsOneWidget);
+          expect(await auth.store.readToken(), 'test-token');
+          await tester.ensureVisible(find.text('Retry'));
+          await tester.tap(find.text('Retry'));
+          await tester.pumpAndSettle();
+          expect(find.text('Updated inspection'), findsOneWidget);
+          expect(find.text('Detail unavailable'), findsNothing);
+          expect(calls, 2);
+        } else {
+          expect(find.text('Task not found'), findsOneWidget);
+          expect(find.text('Retry'), findsNothing);
+          await tester.ensureVisible(find.text('Back to tasks'));
+          await tester.tap(find.text('Back to tasks'));
+          await tester.pumpAndSettle();
+          expect(find.text('Project tasks'), findsOneWidget);
+          expect(find.text('Site inspection'), findsOneWidget);
+          expect(await auth.store.readToken(), 'test-token');
+          expect(calls, 1);
+        }
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
+
+  testWidgets(
+    'detail connectivity error retries the same task without clearing the session',
+    (tester) async {
+      // Une panne reseau ne signifie pas que le token est expire.
+      var calls = 0;
+      final auth = createDetailSession((request) async {
+        expect(request.url.path, '/api/tasks/501');
+        if (++calls == 1) throw http.ClientException('Offline');
+        return http.Response(detailResponse, 200);
+      });
+      await openDetails(tester, auth);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Could not connect. Check your internet connection.'),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(find.text('Retry'));
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.text('Updated inspection'), findsOneWidget);
+      expect(await auth.store.readToken(), 'test-token');
+      expect(calls, 2);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'long detail fields and comment fit a narrow screen with enlarged text',
+    (tester) async {
+      // Les lignes d'information passent en vertical et les textes restent scrollables.
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.8;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final data = jsonDecode(detailResponse) as Map<String, dynamic>;
+      data['task']['name'] =
+          'A very long inspection name for the assigned construction site';
+      data['task']['description'] =
+          'A detailed description of the inspection. ' * 12;
+      data['task']['Project']['name'] = 'A project with a very long name';
+      data['task']['Assignees'] = [
+        {'id': 12, 'full_name': 'A candidate with a long display name'},
+        {'id': 13, 'full_name': 'Second candidate'},
+      ];
+      data['task']['Comments'] = [
+        {
+          'id': 77,
+          'content':
+              'Ready for a detailed inspection of the construction site.',
+          'user': {'name': 'A comment author with a long display name'},
+        },
+      ];
+      final auth = createDetailSession(
+        (request) async => http.Response(jsonEncode(data), 200),
+      );
+      await openDetails(tester, auth);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Second candidate'));
+      await tester.ensureVisible(
+        find.text('Ready for a detailed inspection of the construction site.'),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   testWidgets(
     'latest returned comment shows its content author and timestamp only',
     (tester) async {

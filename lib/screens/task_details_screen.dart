@@ -118,11 +118,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     }
     final details = _details.details;
     if (_details.error != null || details == null) {
-      return [
-        label,
-        const SizedBox(height: 24),
-        Text(_details.error ?? 'Task details unavailable.'),
-      ];
+      return [label, const SizedBox(height: 24), _buildError()];
     }
     return [
       label,
@@ -226,6 +222,61 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       const SizedBox(height: 14),
       _buildComment(details.latestComment),
     ];
+  }
+
+  Widget _buildError() {
+    // 404 propose le retour a la liste; les autres echecs de lecture permettent Retry.
+    final missing = _details.isNotFound;
+    return Semantics(
+      liveRegion: true,
+      child: _buildPanel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Icon(
+              missing
+                  ? Icons.assignment_late_outlined
+                  : Icons.cloud_off_outlined,
+              color: AppColors.muted,
+              size: 36,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              missing ? 'Task not found' : 'Could not load task details',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _details.error ?? 'Task details unavailable.',
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: AppColors.muted,
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (missing)
+              FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: const Text('Back to tasks'),
+              )
+            else ...[
+              FilledButton.icon(
+                onPressed: _details.loadDetails,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Back to tasks'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildInfoRow(String label, Widget value) {
