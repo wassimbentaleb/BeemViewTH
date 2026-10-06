@@ -14,6 +14,37 @@ const tasksResponse =
     '{"tasks":[{"id":501,"name":"Site inspection","status":"to_do","priority":"High","dueDate":"2026-10-09"},{"id":502,"name":"Review drawings","status":"review","priority":"Low","dueDate":null}]}';
 
 void main() {
+  testWidgets('status and name filters combine without fetching tasks again', (
+    tester,
+  ) async {
+    // Choisir un chip conserve le texte saisi et filtre les valeurs API.
+    var calls = 0;
+    final auth = createController(
+      (request) async => http.Response(projectResponse, 200),
+      tasks: (request) async {
+        calls++;
+        return http.Response(tasksResponse, 200);
+      },
+    );
+    await tester.pumpWidget(BeemViewApp(authController: auth));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Interview project'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Filter: To do'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TaskCard), findsOneWidget);
+    expect(find.text('Site inspection'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'drawings');
+    await tester.pump();
+    expect(find.byType(TaskCard), findsNothing);
+    await tester.tap(find.byTooltip('Filter: All'));
+    await tester.pump();
+    expect(find.text('Review drawings'), findsOneWidget);
+    expect(calls, 1);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'name search ignores case and Clear search restores loaded cards',
     (tester) async {

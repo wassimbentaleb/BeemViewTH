@@ -12,6 +12,7 @@ class TasksController extends ChangeNotifier {
   final int projectId;
   List<Task> _tasks = [];
   String _query = '';
+  String? _status;
   bool _isLoading = false;
   String? _error;
   bool _disposed = false;
@@ -19,12 +20,15 @@ class TasksController extends ChangeNotifier {
   // L'interface peut lire les tasks sans modifier directement la liste chargee.
   List<Task> get tasks => List.unmodifiable(_tasks);
   String get query => _query;
-  // La recherche s'applique a la collection en memoire, sans changer les donnees API.
+  String? get status => _status;
+  // Recherche et status se combinent sur la collection chargee, sans requete HTTP.
   List<Task> get visibleTasks {
     final query = _query.trim().toLowerCase();
-    return _tasks
-        .where((task) => task.name.toLowerCase().contains(query))
-        .toList();
+    return _tasks.where((task) {
+      final matchesName = task.name.toLowerCase().contains(query);
+      final matchesStatus = _status == null || task.status == _status;
+      return matchesName && matchesStatus;
+    }).toList();
   }
 
   bool get isLoading => _isLoading;
@@ -34,6 +38,16 @@ class TasksController extends ChangeNotifier {
     // Une saisie actualise seulement les cartes visibles; aucun nouvel appel HTTP.
     if (_query == value || _disposed) return;
     _query = value;
+    _notify();
+  }
+
+  void setStatus(String? value) {
+    // null represente All; un filtre garde la valeur API plutot que son label.
+    if (value != null && !Task.statusLabels.containsKey(value)) {
+      throw ArgumentError('Unknown status filter.');
+    }
+    if (_status == value || _disposed) return;
+    _status = value;
     _notify();
   }
 

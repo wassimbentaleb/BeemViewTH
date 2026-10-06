@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../controllers/tasks_controller.dart';
 import '../core/app_theme.dart';
 import '../models/project.dart';
+import '../models/task.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_card.dart';
@@ -117,6 +118,18 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
+                      // Les huit statuses restent accessibles en faisant defiler les chips.
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilter(null, 'All'),
+                            for (final entry in Task.statusLabels.entries)
+                              _buildFilter(entry.key, entry.value),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       const Text(
                         'Filters apply to loaded tasks',
                         style: TextStyle(color: AppColors.muted, fontSize: 14),
@@ -174,6 +187,34 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
             child: TaskCard(task: task),
           ),
       ],
+    );
+  }
+
+  Widget _buildFilter(String? value, String label) {
+    // Le controller gere la selection; ChoiceChip annonce son etat a l'accessibilite.
+    final selected = _tasks.status == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label),
+        tooltip: 'Filter: $label',
+        selected: selected,
+        showCheckmark: false,
+        onSelected: (_) => _tasks.setStatus(value),
+        selectedColor: AppColors.primary,
+        backgroundColor: const Color(0xFFF4F7FC),
+        labelStyle: TextStyle(
+          color: selected ? Colors.white : AppColors.text,
+          fontSize: 14,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        side: BorderSide(
+          color: selected
+              ? AppColors.primary
+              : AppColors.border.withValues(alpha: 0.6),
+        ),
+        shape: const StadiumBorder(),
+      ),
     );
   }
 }

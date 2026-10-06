@@ -25,6 +25,9 @@ That screen loads the selected project's tasks and displays API names, status,
 priority and available due dates. Returning to Projects preserves its loaded list.
 Task name search runs locally, ignores case and surrounding spaces, and can be
 cleared without fetching the project collection again.
+Status chips cover all eight documented API statuses and combine with name
+search. Scroll them horizontally to reach the remaining statuses. The controls
+are labelled as filtering loaded tasks, and the count shows matching tasks.
 
 ## Run
 
