@@ -55,7 +55,7 @@ lib/
   core/validators.dart       Email and password rules.
   core/app_config.dart       API origin and tenant configuration.
   core/api_exception.dart    Useful API errors with HTTP status codes.
-  models/                    Typed user and login session.
+  models/                    Typed user, login session and project data.
   services/                  HTTP, authentication and secure token storage.
   controllers/               Authentication state, loading and errors.
   screens/                   Login, session check and temporary Projects page.
