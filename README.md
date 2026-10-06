@@ -91,6 +91,8 @@ assignees and creation/update dates. Missing optional associations remain empty.
 `TaskService` reads the `tasks` array from `/api/tasks/project/:projectId` using
 the shared authenticated client. This endpoint returns the whole collection;
 no server search, status parameters or task pagination are used.
+Its `fetchTaskDetails` method reads `/api/tasks/:id` from the `task` envelope,
+checks the returned ID and reports malformed data as a read failure.
 
 `AuthController`, `ProjectsController` and `TasksController` use Flutter's `ChangeNotifier`;
 `ListenableBuilder` rebuilds the interface when their state changes.
