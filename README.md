@@ -20,7 +20,9 @@ user's name. Load more appends the next page, replaces duplicate IDs, blocks
 duplicate requests and disappears after the final page. Its avatar opens the
 account menu with Sign out. Empty results show Reload; request failures show
 Retry. A failed next page keeps the loaded cards and retries the same offset.
-Project selection and task screens follow later.
+Selecting a project passes its ID and name to the Project Tasks destination.
+That screen currently shows an unavailable message; its API, task list, search
+and filters belong to step 5. Returning to Projects preserves its loaded list.
 
 ## Run
 
@@ -61,16 +63,17 @@ lib/
   models/                    Typed user, login session and project data.
   services/                  HTTP, authentication, project pages and token storage.
   controllers/               Session and projects state, loading and errors.
-  screens/                   Login, session check and Projects list.
-  widgets/brand_logo.dart    Shared brand symbol and wordmark.
+  screens/                   Login, session check, Projects and task destination.
+  widgets/                   Brand logo and tappable project cards.
 ```
 
 The request flow is **screen -> controller -> service -> API**. Screens
 display state; controllers manage loading and errors; services call endpoints;
 models turn response JSON into Dart objects.
 
-`AuthController` uses Flutter's `ChangeNotifier`; `ListenableBuilder` rebuilds
-the interface when its state changes. Password visibility uses local `setState`
+`AuthController` and `ProjectsController` use Flutter's `ChangeNotifier`;
+`ListenableBuilder` rebuilds the interface when their state changes.
+Password visibility uses local `setState`
 because it only affects the form. Changing the authenticated user also resets
 navigation, so sign-out or expiry removes authenticated pages from the back stack.
 New logical blocks have short French comments explaining their purpose.
@@ -98,17 +101,24 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
+All 27 tests pass and `flutter analyze` reports no issues.
 The tests cover validation, compact layout, password visibility, request
 payloads, profile parsing, duplicate submissions, token storage, restoration,
 401 versus 403, retained input on API failure, successful login and sign-out.
 Project tests also check data mapping, response envelopes, bearer headers,
 pagination parameters, duplicate IDs, retained cards on retry, empty states,
-401/403 session behavior, loading and long names with enlarged text.
+401/403 session behavior, loading, long names with enlarged text, selected
+project IDs, return navigation and expiry while a project route is open.
 HTTP and storage are simulated in these tests. The real login/profile and
 project-list APIs have also been checked with the supplied test account.
 
 The debug APK was built and installed on an Android API 36 emulator. Real form
-login, session restoration after a full app restart, and sign-out were verified.
+login, session restoration after a full app restart, and sign-out were verified
+during authentication work. For Projects, reopening the installed app restored
+the session and displayed the four projects returned by the API. Project
+selection, return navigation and the account menu were also checked on Android.
+Multi-page behavior and failures were tested with simulated responses because
+the supplied account currently has fewer projects than the page size.
 
 Task endpoints are not implemented yet. There is no refresh-token or
 server logout endpoint in the assignment contract.

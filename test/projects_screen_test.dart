@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:beemview/app.dart';
 import 'package:beemview/controllers/auth_controller.dart';
 import 'package:beemview/core/app_config.dart';
+import 'package:beemview/screens/project_tasks_screen.dart';
 import 'package:beemview/services/api_client.dart';
 import 'package:beemview/services/auth_service.dart';
 import 'package:beemview/services/session_store.dart';
@@ -41,6 +42,72 @@ AuthController createController(
 }
 
 void main() {
+  testWidgets(
+    'project selection passes its ID and name and Back preserves the list',
+    (tester) async {
+      // Le second projet doit ouvrir sa propre destination sans relire la liste au retour.
+      var calls = 0;
+      final controller = createController((request) async {
+        calls++;
+        return http.Response(
+          '{"data":[{"id":101,"name":"First project"},{"id":102,"name":"Second project"}],"total":2}',
+          200,
+        );
+      });
+      await tester.pumpWidget(BeemViewApp(authController: controller));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Second project'));
+      await tester.pumpAndSettle();
+      final screen = tester.widget<ProjectTasksScreen>(
+        find.byType(ProjectTasksScreen),
+      );
+      expect(screen.project.id, 102);
+      expect(screen.project.name, 'Second project');
+      expect(calls, 1);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('First project'), findsOneWidget);
+      expect(find.text('Second project'), findsOneWidget);
+      expect(calls, 1);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('session expiry removes a project route from navigation', (
+    tester,
+  ) async {
+    // Un appel Projects deja en cours peut expirer apres ouverture d'un projet.
+    final nextPage = Completer<http.Response>();
+    final controller = createController((request) async {
+      if (request.url.queryParameters['offset'] == '1') return nextPage.future;
+      return http.Response(
+        '{"data":[{"id":101,"name":"Assigned project"}],"total":2}',
+        200,
+      );
+    });
+    await tester.pumpWidget(BeemViewApp(authController: controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Load more'));
+    await tester.pump();
+    await tester.tap(find.text('Assigned project'));
+    // Deux frames lancent puis terminent la transition sans attendre le spinner HTTP.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(ProjectTasksScreen), findsOneWidget);
+    nextPage.complete(http.Response('{"message":"Expired"}', 401));
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.byType(ProjectTasksScreen), findsNothing);
+    expect(
+      Navigator.of(tester.element(find.text('Welcome back'))).canPop(),
+      isFalse,
+    );
+    expect(await controller.store.readToken(), isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'empty projects show Reload then replace the empty state on success',
     (tester) async {

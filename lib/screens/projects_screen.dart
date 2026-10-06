@@ -8,6 +8,8 @@ import '../core/app_theme.dart';
 import '../models/project.dart';
 import '../services/project_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/project_card.dart';
+import 'project_tasks_screen.dart';
 
 // Affiche les projets du compte connecte et possede leur controller.
 class ProjectsScreen extends StatefulWidget {
@@ -26,6 +28,7 @@ class ProjectsScreen extends StatefulWidget {
 
 class _ProjectsScreenState extends State<ProjectsScreen> {
   late final ProjectsController _projects;
+  bool _openingProject = false;
 
   @override
   void initState() {
@@ -148,7 +151,22 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     );
   }
 
+  Future<void> _openProject(Project project) async {
+    // Un double clic ne doit pas empiler deux fois le meme ecran.
+    if (_openingProject || widget.controller.isLoading) return;
+    _openingProject = true;
+    // Le projet type transporte son ID et son nom sans refaire un appel API.
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) => ProjectTasksScreen(project: project),
+      ),
+    );
+    if (mounted) _openingProject = false;
+  }
+
   Widget _buildProjects() {
+    // Une copie stable sert aux cartes et a leurs callbacks pendant ce rebuild.
+    final projects = _projects.projects;
     // Le spinner remplace les cartes uniquement pendant le premier chargement.
     if (_projects.isLoading) {
       return const Padding(
@@ -158,7 +176,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
       );
     }
-    if (_projects.error != null && _projects.projects.isEmpty) {
+    if (_projects.error != null && projects.isEmpty) {
       // Un echec initial propose un nouvel essai de la premiere page.
       return Semantics(
         liveRegion: true,
@@ -170,7 +188,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
       );
     }
-    if (_projects.projects.isEmpty) {
+    if (projects.isEmpty) {
       // Zero projet est un resultat valide; Reload permet de verifier un nouvel acces.
       return _buildMessage(
         icon: Icons.folder_off_outlined,
@@ -184,13 +202,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     const colors = [AppColors.primary, Color(0xFF00B88D), AppColors.amber];
     return Column(
       children: [
-        for (var index = 0; index < _projects.projects.length; index++)
+        for (var index = 0; index < projects.length; index++)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _ProjectCard(
-              project: _projects.projects[index],
+            child: ProjectCard(
+              project: projects[index],
               color: colors[index % colors.length],
               highlighted: index == 0,
+              onTap: () => unawaited(_openProject(projects[index])),
             ),
           ),
         // La page suivante conserve les cartes et desactive le bouton pendant l'appel.
@@ -278,80 +297,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             label: Text(actionLabel),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// Une carte laisse le nom se repartir sur plusieurs lignes si necessaire.
-class _ProjectCard extends StatelessWidget {
-  const _ProjectCard({
-    required this.project,
-    required this.color,
-    required this.highlighted,
-  });
-
-  final Project project;
-  final Color color;
-  final bool highlighted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      elevation: highlighted ? 0 : 1,
-      shadowColor: AppColors.text.withValues(alpha: 0.06),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: highlighted
-              ? AppColors.primary.withValues(alpha: 0.55)
-              : const Color(0xFFE8EDF5),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            // L'icone de dossier utilise une teinte legere comme dans la reference.
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.folder_outlined, color: color, size: 32),
-            ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    project.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Project',
-                    style: TextStyle(color: AppColors.muted, fontSize: 15),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.muted,
-              size: 28,
-            ),
-          ],
-        ),
       ),
     );
   }
