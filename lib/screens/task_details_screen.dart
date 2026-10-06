@@ -7,6 +7,7 @@ import '../core/app_theme.dart';
 import '../core/date_formatter.dart';
 import '../models/project.dart';
 import '../models/task.dart';
+import '../models/task_comment.dart';
 import '../models/user.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
@@ -222,6 +223,8 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           ],
         ),
       ),
+      const SizedBox(height: 14),
+      _buildComment(details.latestComment),
     ];
   }
 
@@ -270,18 +273,89 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     final name = user.fullName.trim().isEmpty ? 'User' : user.fullName.trim();
     return Row(
       children: [
-        CircleAvatar(
-          radius: 16,
-          backgroundColor: const Color(0xFFDDF4FC),
-          foregroundColor: const Color(0xFF007AF5),
-          child: Text(
-            name.characters.first.toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
+        _buildAvatar(name, radius: 16),
         const SizedBox(width: 10),
         Expanded(child: Text(name)),
       ],
+    );
+  }
+
+  Widget _buildComment(TaskComment? comment) {
+    // Un seul commentaire est affiche: le plus recent parmi ceux retournes par l'API.
+    return _buildPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Latest comment',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 16),
+          if (comment == null)
+            const Text(
+              'No comments available.',
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            )
+          else ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildAvatar(comment.authorName, radius: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        comment.authorName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          height: 1.4,
+                        ),
+                      ),
+                      if (comment.createdAt != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormatter.timestamp(comment.createdAt!),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              comment.content,
+              style: const TextStyle(fontSize: 16, height: 1.6),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String name, {required double radius}) {
+    // Assignees et auteur du commentaire partagent le meme avatar a initiale.
+    final text = name.trim();
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: const Color(0xFFDDF4FC),
+      foregroundColor: const Color(0xFF007AF5),
+      child: Text(
+        text.isEmpty ? '?' : text.characters.first.toUpperCase(),
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
     );
   }
 

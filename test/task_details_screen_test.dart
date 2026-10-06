@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:beemview/app.dart';
 import 'package:beemview/controllers/auth_controller.dart';
+import 'package:beemview/core/date_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -44,6 +45,43 @@ Future<void> openDetails(WidgetTester tester, AuthController auth) async {
 }
 
 void main() {
+  testWidgets(
+    'latest returned comment shows its content author and timestamp only',
+    (tester) async {
+      // L'ecran ne montre pas un ancien commentaire juste parce qu'il arrive en premier.
+      final data = jsonDecode(detailResponse) as Map<String, dynamic>;
+      data['task']['Comments'] = [
+        {
+          'id': 90,
+          'content': 'Older comment',
+          'created_at': '2026-10-05T09:00:00Z',
+          'user': {'name': 'Older user'},
+        },
+        {
+          'id': 77,
+          'content': 'Ready for inspection',
+          'created_at': '2026-10-06T09:00:00Z',
+          'user': {'name': 'Comment author'},
+        },
+      ];
+      final auth = createDetailSession(
+        (request) async => http.Response(jsonEncode(data), 200),
+      );
+      await openDetails(tester, auth);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Ready for inspection'));
+      expect(find.text('Comment author'), findsOneWidget);
+      expect(
+        find.text(DateFormatter.timestamp(DateTime.utc(2026, 10, 6, 9))),
+        findsOneWidget,
+      );
+      expect(find.text('Older comment'), findsNothing);
+      expect(find.text('Older user'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   testWidgets(
     'details display project every assignee and all available dates',
     (tester) async {
@@ -112,6 +150,7 @@ void main() {
     await openDetails(tester, auth);
     await tester.pumpAndSettle();
     expect(find.text('No description provided.'), findsOneWidget);
+    expect(find.text('No comments available.'), findsOneWidget);
     expect(find.text('Interview project'), findsOneWidget);
     expect(find.text('Unassigned'), findsOneWidget);
     expect(find.text('No start date'), findsOneWidget);

@@ -2,6 +2,64 @@ import 'package:beemview/models/task_details.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('latest returned comment is selected by timestamp rather than array order or ID', () {
+    // L'ID le plus grand et le premier element ne sont pas forcement les plus recents.
+    final details = TaskDetails.fromJson({
+      'id': 501,
+      'Comments': [
+        {
+          'id': 90,
+          'content': 'Older',
+          'created_at': '2026-10-05T09:00:00Z',
+          'user': {'name': 'First'},
+        },
+        {
+          'id': 77,
+          'content': 'Latest',
+          'created_at': '2026-10-06T09:00:00Z',
+          'user': {'full_name': ' Candidate '},
+        },
+        {'id': 91, 'content': 'Middle', 'created_at': '2026-10-06T08:00:00Z'},
+        {'id': 99, 'content': 'Undated', 'created_at': null},
+      ],
+    });
+    expect(details.latestComment!.id, 77);
+    expect(details.latestComment!.authorName, 'Candidate');
+    expect(details.latestComment!.content, 'Latest');
+    expect(() => details.comments.clear(), throwsUnsupportedError);
+  });
+
+  test('missing comment metadata stays readable and undated comments keep returned order', () {
+    // Sans timestamp on ne peut pas inventer un ordre chronologique.
+    final details = TaskDetails.fromJson({
+      'id': 501,
+      'Comments': [
+        {'id': 77, 'content': ' ', 'created_at': 'invalid', 'user': null},
+        {'id': 78, 'content': 'Another undated comment'},
+      ],
+    });
+    expect(details.latestComment!.id, 77);
+    expect(details.latestComment!.authorName, 'Unknown user');
+    expect(details.latestComment!.content, 'No comment text available.');
+    expect(details.latestComment!.createdAt, isNull);
+    expect(
+      TaskDetails.fromJson({'id': 501, 'Comments': null}).latestComment,
+      isNull,
+    );
+    for (final comments in [
+      {},
+      [null],
+      [
+        {'id': 0},
+      ],
+    ]) {
+      expect(
+        () => TaskDetails.fromJson({'id': 501, 'Comments': comments}),
+        throwsFormatException,
+      );
+    }
+  });
+
   test(
     'detail fields reuse task normalization and map project and every assignee',
     () {

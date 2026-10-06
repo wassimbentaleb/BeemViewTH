@@ -1,5 +1,6 @@
 import 'project.dart';
 import 'task.dart';
+import 'task_comment.dart';
 import 'user.dart';
 
 // Complete la task commune avec les informations retournees par la route Details.
@@ -11,6 +12,7 @@ class TaskDetails {
     this.assignees = const [],
     this.createdAt,
     this.updatedAt,
+    this.comments = const [],
   });
 
   final Task task;
@@ -19,16 +21,36 @@ class TaskDetails {
   final List<User> assignees;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final List<TaskComment> comments;
+
+  TaskComment? get latestComment {
+    // Les reponses ne sont pas supposees triees: on compare les instants disponibles.
+    TaskComment? latest;
+    for (final comment in comments) {
+      final date = comment.createdAt;
+      if (latest == null ||
+          (date != null &&
+              (latest.createdAt == null || date.isAfter(latest.createdAt!)))) {
+        latest = comment;
+      }
+    }
+    // Sans aucune date utilisable, on conserve le premier commentaire retourne.
+    return latest;
+  }
 
   factory TaskDetails.fromJson(Map<String, dynamic> json) {
     // Les associations peuvent etre absentes ou null, mais doivent garder leur type.
     final project = json['Project'];
     final assignees = json['Assignees'];
+    final comments = json['Comments'];
     if (project != null && project is! Map<String, dynamic>) {
       throw const FormatException('Invalid task project.');
     }
     if (assignees != null && assignees is! List) {
       throw const FormatException('Invalid task assignees.');
+    }
+    if (comments != null && comments is! List) {
+      throw const FormatException('Invalid task comments.');
     }
     return TaskDetails(
       // Le meme model normalise status, priorite et dates pour liste et details.
@@ -45,6 +67,15 @@ class TaskDetails {
       ),
       createdAt: _date(json['created_at']),
       updatedAt: _date(json['updated_at']),
+      // On conserve seulement les commentaires retournes, pas un historique complet.
+      comments: List.unmodifiable(
+        (comments as List? ?? []).map((item) {
+          if (item is! Map<String, dynamic>) {
+            throw const FormatException('Invalid task comment.');
+          }
+          return TaskComment.fromJson(item);
+        }),
+      ),
     );
   }
 

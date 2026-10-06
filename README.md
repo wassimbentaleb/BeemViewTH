@@ -40,6 +40,11 @@ The detail information panel shows the returned project, every assignee, start
 and due dates, and creation/update timestamps when present. Null values display
 Unassigned or No date messages; an absent project association uses the selected
 project from navigation. Rows stack on narrow screens or with enlarged text.
+Latest comment shows content, author and timestamp when available. The newest
+returned timestamp determines the selection; if none are usable, the first
+returned comment is shown. Empty responses show No comments available. Only
+the returned comments are considered; this endpoint provides up to ten recent
+comments, rather than a complete history.
 
 ## Run
 
