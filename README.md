@@ -36,6 +36,10 @@ Selecting a task passes its ID and project to the Task Details destination;
 double taps open only one route. Returning retains the loaded tasks, search and
 status filter. Details fetch the current task name, status, priority and
 description from the API; missing descriptions have a clear empty value.
+The detail information panel shows the returned project, every assignee, start
+and due dates, and creation/update timestamps when present. Null values display
+Unassigned or No date messages; an absent project association uses the selected
+project from navigation. Rows stack on narrow screens or with enlarged text.
 
 ## Run
 

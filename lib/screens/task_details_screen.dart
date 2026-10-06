@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../controllers/task_details_controller.dart';
 import '../core/app_theme.dart';
+import '../core/date_formatter.dart';
 import '../models/project.dart';
 import '../models/task.dart';
+import '../models/user.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_badges.dart';
@@ -151,7 +153,136 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           ],
         ),
       ),
+      const SizedBox(height: 14),
+      _buildPanel(
+        child: Column(
+          children: [
+            // Le projet retourne est prioritaire; celui de la navigation sert de fallback.
+            _buildInfoRow(
+              'Project',
+              Text((details.project ?? widget.project).name),
+            ),
+            const Divider(height: 28, color: AppColors.border),
+            _buildInfoRow(
+              'Assigned to',
+              details.assignees.isEmpty
+                  ? const Text(
+                      'Unassigned',
+                      style: TextStyle(color: AppColors.muted),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (
+                          var index = 0;
+                          index < details.assignees.length;
+                          index++
+                        )
+                          Padding(
+                            padding: EdgeInsets.only(top: index == 0 ? 0 : 12),
+                            child: _buildAssignee(details.assignees[index]),
+                          ),
+                      ],
+                    ),
+            ),
+            const Divider(height: 28, color: AppColors.border),
+            // Start et due sont des dates de calendrier; leur absence reste explicite.
+            _buildInfoRow(
+              'Start date',
+              Text(
+                details.task.startedDate == null
+                    ? 'No start date'
+                    : DateFormatter.date(details.task.startedDate!),
+              ),
+            ),
+            const Divider(height: 28, color: AppColors.border),
+            _buildInfoRow(
+              'Due date',
+              Text(
+                details.task.dueDate == null
+                    ? 'No due date'
+                    : DateFormatter.date(details.task.dueDate!),
+              ),
+            ),
+            // Les instants supplementaires ne sont affiches que lorsqu'ils existent.
+            if (details.createdAt != null) ...[
+              const Divider(height: 28, color: AppColors.border),
+              _buildInfoRow(
+                'Created',
+                Text(DateFormatter.timestamp(details.createdAt!)),
+              ),
+            ],
+            if (details.updatedAt != null) ...[
+              const Divider(height: 28, color: AppColors.border),
+              _buildInfoRow(
+                'Updated',
+                Text(DateFormatter.timestamp(details.updatedAt!)),
+              ),
+            ],
+          ],
+        ),
+      ),
     ];
+  }
+
+  Widget _buildInfoRow(String label, Widget value) {
+    // Deux colonnes sur mobile normal; presentation verticale si largeur/police exigent plus de place.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final labelWidget = Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+        final valueWidget = DefaultTextStyle(
+          style: TextStyle(
+            fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
+            color: AppColors.text,
+            fontSize: 14,
+            height: 1.5,
+          ),
+          child: value,
+        );
+        if (constraints.maxWidth < 280 ||
+            MediaQuery.textScalerOf(context).scale(14) > 20) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [labelWidget, const SizedBox(height: 8), valueWidget],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 2, child: labelWidget),
+            const SizedBox(width: 12),
+            Expanded(flex: 3, child: valueWidget),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAssignee(User user) {
+    // Chaque personne est affichee; la premiere lettre est une decoration, pas une photo.
+    final name = user.fullName.trim().isEmpty ? 'User' : user.fullName.trim();
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: const Color(0xFFDDF4FC),
+          foregroundColor: const Color(0xFF007AF5),
+          child: Text(
+            name.characters.first.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(name)),
+      ],
+    );
   }
 
   Widget _buildPanel({required Widget child}) {

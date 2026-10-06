@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../core/date_formatter.dart';
 import '../models/task.dart';
 import 'task_badges.dart';
 
@@ -68,7 +69,7 @@ class TaskCard extends StatelessWidget {
                     child: Text(
                       task.dueDate == null
                           ? 'No due date'
-                          : 'Due ${_formatDate(task.dueDate!)}',
+                          : 'Due ${DateFormatter.date(task.dueDate!)}',
                       style: const TextStyle(
                         color: AppColors.muted,
                         fontSize: 14,
@@ -83,24 +84,5 @@ class TaskCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    // Le format anglais de la maquette ne necessite pas de package supplementaire.
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }

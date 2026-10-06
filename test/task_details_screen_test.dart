@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:beemview/app.dart';
 import 'package:beemview/controllers/auth_controller.dart';
@@ -44,6 +45,36 @@ Future<void> openDetails(WidgetTester tester, AuthController auth) async {
 
 void main() {
   testWidgets(
+    'details display project every assignee and all available dates',
+    (tester) async {
+      // Les informations viennent de Details, y compris un projet renomme depuis la liste.
+      final data = jsonDecode(detailResponse) as Map<String, dynamic>;
+      final task = data['task'] as Map<String, dynamic>;
+      task['Project'] = {'id': 102, 'name': 'Updated project name'};
+      task['Assignees'] = [
+        {'id': 12, 'full_name': 'Candidate'},
+        {'id': 13, 'full_name': 'Colleague'},
+      ];
+      task['created_at'] = '2026-10-05T09:00:00Z';
+      task['updated_at'] = '2026-10-06T10:00:00Z';
+      final auth = createDetailSession(
+        (request) async => http.Response(jsonEncode(data), 200),
+      );
+      await openDetails(tester, auth);
+      await tester.pumpAndSettle();
+      expect(find.text('Updated project name'), findsOneWidget);
+      expect(find.text('Candidate'), findsOneWidget);
+      expect(find.text('Colleague'), findsOneWidget);
+      expect(find.text('Oct 6, 2026'), findsOneWidget);
+      expect(find.text('Oct 9, 2026'), findsOneWidget);
+      expect(find.text('Created'), findsOneWidget);
+      expect(find.text('Updated'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
     'details show loading then fresh API name badges and description',
     (tester) async {
       // Une seule lecture utilise l'ID choisi et actualise les anciennes donnees de la carte.
@@ -81,6 +112,12 @@ void main() {
     await openDetails(tester, auth);
     await tester.pumpAndSettle();
     expect(find.text('No description provided.'), findsOneWidget);
+    expect(find.text('Interview project'), findsOneWidget);
+    expect(find.text('Unassigned'), findsOneWidget);
+    expect(find.text('No start date'), findsOneWidget);
+    expect(find.text('No due date'), findsOneWidget);
+    expect(find.text('Created'), findsNothing);
+    expect(find.text('Updated'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
