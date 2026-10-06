@@ -134,7 +134,10 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     }
     _openingStatus = true;
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (context) => UpdateStatusScreen(task: task)),
+      MaterialPageRoute(
+        builder: (context) =>
+            UpdateStatusScreen(task: task, service: widget.service),
+      ),
     );
     // Cette destination ne modifie rien pour le moment: retour sans nouvelle lecture.
     if (mounted) _openingStatus = false;
