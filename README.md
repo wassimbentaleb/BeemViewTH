@@ -4,8 +4,8 @@ A Flutter mobile app for the BeemView take-home assignment.
 
 ## Current step
 
-The login form is implemented. API origin and tenant configuration are
-now available; authentication is not connected yet.
+The API layer supports login and the current-user profile. The login form
+is not connected to it yet.
 
 The form validates email/password, supports password visibility and autofill,
 and scrolls on small screens or when the keyboard opens. Project lists, tasks,
@@ -40,7 +40,7 @@ New logical blocks have short French comments explaining their purpose.
 
 ## Dependencies and checks
 
-No additional runtime packages are needed at this step.
+`http` 1.6.0 handles JSON requests, bearer headers and a 20-second timeout.
 The brand image and Plus Jakarta Sans font are bundled locally; the font license
 is included in `assets/fonts/OFL.txt`. Credentials, tokens and previews are ignored.
 

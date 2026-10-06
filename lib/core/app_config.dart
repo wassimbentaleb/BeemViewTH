@@ -1,3 +1,5 @@
+import 'api_exception.dart';
+
 // Configuration de l'API, separee des champs email et mot de passe.
 class AppConfig {
   const AppConfig({
@@ -19,6 +21,14 @@ class AppConfig {
   final String apiOrigin;
   final String subdomain;
 
-  // Transforme l'origine configuree en adresse utilisable pour les requetes.
-  Uri get origin => Uri.parse(apiOrigin.trim());
+  Uri get origin {
+    // On verifie l'adresse avant d'envoyer une requete.
+    final uri = Uri.tryParse(apiOrigin.trim());
+    if (uri == null ||
+        !['http', 'https'].contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      throw const ApiException('App configuration is incomplete.');
+    }
+    return uri;
+  }
 }
