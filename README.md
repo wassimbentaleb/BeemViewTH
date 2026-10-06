@@ -86,6 +86,8 @@ models turn response JSON into Dart objects.
 
 `Task` normalizes list/detail date keys and priority casing, keeps optional dates
 nullable, and preserves unfamiliar status labels. Numeric progress is ignored.
+`TaskDetails` composes the same task model with optional description, project,
+assignees and creation/update dates. Missing optional associations remain empty.
 `TaskService` reads the `tasks` array from `/api/tasks/project/:projectId` using
 the shared authenticated client. This endpoint returns the whole collection;
 no server search, status parameters or task pagination are used.
