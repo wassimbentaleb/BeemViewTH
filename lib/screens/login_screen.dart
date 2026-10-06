@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../controllers/auth_controller.dart';
 import '../core/app_theme.dart';
 import '../core/validators.dart';
 import '../widgets/brand_logo.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, required this.controller});
+
+  final AuthController controller;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Les champs et la visibilite du password sont des etats locaux du formulaire.
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -19,24 +24,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    // Libere les champs quand on quitte le Login.
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) {
+  Future<void> _submit() async {
+    // La validation locale evite un appel API inutile ou un double envoi.
+    if (widget.controller.isLoading || !_formKey.currentState!.validate()) {
       return;
     }
     FocusScope.of(context).unfocus();
-    // Replace this message with the auth controller in the API step.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sign-in is not available yet.')),
+    // Le controller traite la requete, les erreurs et le token.
+    final success = await widget.controller.signIn(
+      email: _emailController.text,
+      password: _passwordController.text,
     );
+    // Le gestionnaire de mots de passe recoit uniquement une connexion reussie.
+    if (success) TextInput.finishAutofillContext(shouldSave: true);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Le scroll et SafeArea gardent les champs accessibles avec le clavier.
     return Scaffold(
       body: DecoratedBox(
         decoration: const BoxDecoration(
@@ -94,6 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildHeader() {
+    // Logo et texte d'accueil reprennent la maquette fournie.
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -131,6 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildForm() {
+    // La carte regroupe les champs, l'erreur serveur et le bouton de connexion.
     const labelStyle = TextStyle(fontSize: 17, fontWeight: FontWeight.w700);
 
     return Container(
@@ -156,6 +169,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('Email', style: labelStyle),
               const SizedBox(height: 8),
               TextFormField(
+                // L'email se valide localement et se nettoie dans le service.
+                enabled: !widget.controller.isLoading,
                 controller: _emailController,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.emailAddress,
@@ -173,6 +188,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('Password', style: labelStyle),
               const SizedBox(height: 8),
               TextFormField(
+                // On garde la saisie exacte du password et on bloque l'edition en cours.
+                enabled: !widget.controller.isLoading,
                 controller: _passwordController,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 obscureText: _hidePassword,
@@ -187,8 +204,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.lock_outline_rounded, size: 24),
                   suffixIcon: IconButton(
                     tooltip: _hidePassword ? 'Show password' : 'Hide password',
-                    onPressed: () =>
-                        setState(() => _hidePassword = !_hidePassword),
+                    onPressed: widget.controller.isLoading
+                        ? null
+                        : () => setState(() => _hidePassword = !_hidePassword),
                     icon: Icon(
                       _hidePassword
                           ? Icons.visibility_outlined
@@ -199,14 +217,36 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+              // Une erreur API reste dans le formulaire sans vider les champs.
+              if (widget.controller.error != null) ...[
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    widget.controller.error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               FilledButton(
-                onPressed: _submit,
-                child: const Row(
+                // Le spinner et le bouton desactive empechent les doubles clics.
+                onPressed: widget.controller.isLoading ? null : _submit,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Sign in'),
-                    SizedBox(width: 12),
-                    Icon(Icons.arrow_forward_rounded, size: 24),
+                    if (widget.controller.isLoading)
+                      const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else ...[
+                      const Text('Sign in'),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.arrow_forward_rounded, size: 24),
+                    ],
                   ],
                 ),
               ),
@@ -218,6 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildFooter() {
+    // Signature de marque en bas de l'ecran.
     return const Padding(
       padding: EdgeInsets.only(top: 40, bottom: 32),
       child: Text.rich(

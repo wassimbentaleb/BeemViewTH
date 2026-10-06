@@ -4,8 +4,9 @@ A Flutter mobile app for the BeemView take-home assignment.
 
 ## Current step
 
-The API layer supports login and the current-user profile. The login form
-is not connected to it yet.
+Login now calls the API, shows loading and retains input on errors.
+Success opens a temporary Projects landing page with the returned user name.
+The session is kept in memory only; token storage is the next change.
 
 The form validates email/password, supports password visibility and autofill,
 and scrolls on small screens or when the keyboard opens. Project lists, tasks,
