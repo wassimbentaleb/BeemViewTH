@@ -32,10 +32,19 @@ class ApiClient {
     };
   }
 
-  Future<Map<String, dynamic>> get(String path) {
-    // GET sert a lire des donnees, comme le profil de l'utilisateur.
+  Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, String>? queryParameters,
+  }) {
+    // Uri encode les parametres; les appels sans pagination restent identiques.
+    final uri = _origin.resolve(path);
     return _readResponse(
-      _client.get(_origin.resolve(path), headers: _headers(true)),
+      _client.get(
+        queryParameters == null
+            ? uri
+            : uri.replace(queryParameters: queryParameters),
+        headers: _headers(true),
+      ),
       authenticated: true,
     );
   }

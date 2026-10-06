@@ -56,7 +56,7 @@ lib/
   core/app_config.dart       API origin and tenant configuration.
   core/api_exception.dart    Useful API errors with HTTP status codes.
   models/                    Typed user, login session and project data.
-  services/                  HTTP, authentication and secure token storage.
+  services/                  HTTP, authentication, project pages and token storage.
   controllers/               Authentication state, loading and errors.
   screens/                   Login, session check and temporary Projects page.
   widgets/brand_logo.dart    Shared brand symbol and wordmark.
