@@ -52,6 +52,7 @@ class TasksController extends ChangeNotifier {
   }
 
   Future<void> loadTasks() async {
+    // Retry conserve recherche et status afin de retrouver la meme vue apres succes.
     // Un double clic ou un ecran ferme ne doit pas lancer une autre requete.
     if (_isLoading || _disposed) return;
     _isLoading = true;
@@ -68,6 +69,14 @@ class TasksController extends ChangeNotifier {
       _isLoading = false;
       _notify();
     }
+  }
+
+  void clearFilters() {
+    // Remet les deux controles a zero en une seule notification.
+    if (_disposed) return;
+    _query = '';
+    _status = null;
+    _notify();
   }
 
   void _notify() {

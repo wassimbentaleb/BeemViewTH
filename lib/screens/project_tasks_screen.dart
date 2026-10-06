@@ -135,24 +135,28 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                         style: TextStyle(color: AppColors.muted, fontSize: 14),
                       ),
                       const SizedBox(height: 24),
-                      Row(
+                      // Wrap garde le compteur lisible meme avec une grande police.
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 16,
+                        runSpacing: 8,
                         children: [
-                          const Expanded(
-                            child: Text(
-                              'Tasks',
-                              style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
+                          const Text(
+                            'Tasks',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          if (!_tasks.isLoading && _tasks.error == null)
+                            Text(
+                              '${_tasks.visibleTasks.length} ${_tasks.visibleTasks.length == 1 ? 'task' : 'tasks'}',
+                              style: const TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 16,
                               ),
                             ),
-                          ),
-                          Text(
-                            '${_tasks.visibleTasks.length} tasks',
-                            style: const TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 16,
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -178,7 +182,41 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
         ),
       );
     }
-    if (_tasks.error != null) return Text(_tasks.error!);
+    // Le vide du serveur et le vide des filtres demandent des actions differentes.
+    if (_tasks.error != null) {
+      return Semantics(
+        liveRegion: true,
+        child: _buildMessage(
+          icon: Icons.cloud_off_outlined,
+          title: 'Could not load tasks',
+          message: _tasks.error!,
+          actionLabel: 'Retry',
+          onAction: _tasks.loadTasks,
+        ),
+      );
+    }
+    if (_tasks.tasks.isEmpty) {
+      return _buildMessage(
+        icon: Icons.checklist_rounded,
+        title: 'No tasks yet',
+        message: 'This project has no tasks.',
+        actionLabel: 'Reload',
+        onAction: _tasks.loadTasks,
+      );
+    }
+    if (_tasks.visibleTasks.isEmpty) {
+      return _buildMessage(
+        icon: Icons.search_off_rounded,
+        title: 'No matching tasks',
+        message: 'Try another name or status.',
+        actionLabel: 'Clear filters',
+        onAction: () {
+          _search.clear();
+          _tasks.clearFilters();
+          FocusScope.of(context).unfocus();
+        },
+      );
+    }
     return Column(
       children: [
         for (final task in _tasks.visibleTasks)
@@ -214,6 +252,47 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
               : AppColors.border.withValues(alpha: 0.6),
         ),
         shape: const StadiumBorder(),
+      ),
+    );
+  }
+
+  Widget _buildMessage({
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    // Les etats de lecture partagent un panneau simple avec une action explicite.
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(icon, size: 36, color: AppColors.muted),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 16,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          FilledButton(onPressed: onAction, child: Text(actionLabel)),
+        ],
       ),
     );
   }

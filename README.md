@@ -28,6 +28,10 @@ cleared without fetching the project collection again.
 Status chips cover all eight documented API statuses and combine with name
 search. Scroll them horizontally to reach the remaining statuses. The controls
 are labelled as filtering loaded tasks, and the count shows matching tasks.
+Failed reads show a useful message and Retry. Empty projects offer Reload;
+empty filter results offer Clear filters, which resets name and status locally.
+Retry preserves the entered search and selected status. A task API 401 returns
+to Login and clears the session; 403 leaves the session available for retry.
 
 ## Run
 
