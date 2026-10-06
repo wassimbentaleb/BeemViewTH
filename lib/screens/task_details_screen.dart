@@ -34,6 +34,8 @@ class TaskDetailsScreen extends StatefulWidget {
 class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   late final TaskDetailsController _details;
   bool _openingStatus = false;
+  bool _taskChanged = false;
+  bool _leaving = false;
 
   @override
   void initState() {
@@ -56,36 +58,44 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _details,
-      builder: (context, child) => Scaffold(
-        appBar: AppBar(
-          title: const BrandLogo(),
-          centerTitle: true,
-          toolbarHeight: 76,
-          backgroundColor: AppColors.background,
-          scrolledUnderElevation: 0,
-        ),
-        // Le fond discret, les titres et les panneaux suivent la maquette Details.
-        bottomNavigationBar: _buildStatusAction(),
-        body: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFF3FBFE), AppColors.background],
-              stops: [0, 0.5],
-            ),
+      builder: (context, child) => PopScope<bool>(
+        // Toolbar et retour Android transmettent le meme signal a la liste Tasks.
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) _backToTasks();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: BackButton(onPressed: _backToTasks),
+            title: const BrandLogo(),
+            centerTitle: true,
+            toolbarHeight: 76,
+            backgroundColor: AppColors.background,
+            scrolledUnderElevation: 0,
           ),
-          child: SafeArea(
-            top: false,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: _buildContent(),
+          // Le fond discret, les titres et les panneaux suivent la maquette Details.
+          bottomNavigationBar: _buildStatusAction(),
+          body: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFF3FBFE), AppColors.background],
+                stops: [0, 0.5],
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: _buildContent(),
+                    ),
                   ),
                 ),
               ),
@@ -133,14 +143,26 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       return;
     }
     _openingStatus = true;
-    await Navigator.of(context).push<void>(
+    final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) =>
             UpdateStatusScreen(task: task, service: widget.service),
       ),
     );
-    // Cette destination ne modifie rien pour le moment: retour sans nouvelle lecture.
-    if (mounted) _openingStatus = false;
+    if (!mounted) return;
+    _openingStatus = false;
+    // Une ecriture confirmee/possible ou une task disparue demande une fiche fraiche.
+    if (changed == true) {
+      _taskChanged = true;
+      await _details.loadDetails();
+    }
+  }
+
+  void _backToTasks() {
+    // Le signal reste vrai meme si le GET suivant echoue; la liste doit aussi se rafraichir.
+    if (_leaving || !mounted) return;
+    _leaving = true;
+    Navigator.of(context).pop(_taskChanged);
   }
 
   List<Widget> _buildContent() {
@@ -307,7 +329,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
             const SizedBox(height: 20),
             if (missing)
               FilledButton.icon(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: _backToTasks,
                 icon: const Icon(Icons.arrow_back_rounded),
                 label: const Text('Back to tasks'),
               )
@@ -319,7 +341,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: _backToTasks,
                 child: const Text('Back to tasks'),
               ),
             ],

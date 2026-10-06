@@ -19,6 +19,7 @@ AuthController createController(
   Future<http.Response> Function(http.Request) projects, {
   Future<http.Response> Function(http.Request)? tasks,
   Future<http.Response> Function(http.Request)? details,
+  Future<http.Response> Function(http.Request)? writes,
 }) {
   const config = AppConfig(subdomain: 'test-tenant');
   FlutterSecureStorage.setMockInitialValues({
@@ -29,6 +30,11 @@ AuthController createController(
     client: MockClient((request) async {
       if (request.url.path == '/api/users/me/profile') {
         return http.Response('{"user":{"id":12,"full_name":"Test User"}}', 200);
+      }
+      // Les tests Update fournissent les reponses de PUT/POST separement des lectures.
+      if (request.method != 'GET') {
+        if (writes != null) return writes(request);
+        fail('Unexpected write ${request.method} ${request.url.path}');
       }
       // Les tests Projects peuvent ouvrir Tasks sans simuler des appels de projet en plus.
       if (request.url.path.startsWith('/api/tasks/project/')) {

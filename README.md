@@ -33,8 +33,8 @@ empty filter results offer Clear filters, which resets name and status locally.
 Retry preserves the entered search and selected status. A task API 401 returns
 to Login and clears the session; 403 leaves the session available for retry.
 Selecting a task passes its ID and project to the Task Details destination;
-double taps open only one route. Returning retains the loaded tasks, search and
-status filter. Details fetch the current task name, status, priority and
+double taps open only one route. Returning retains search and status filters;
+the collection is refreshed after a task change. Details fetch the current task name, status, priority and
 description from the API; missing descriptions have a clear empty value.
 The detail information panel shows the returned project, every assignee, start
 and due dates, and creation/update timestamps when present. Null values display
@@ -50,8 +50,21 @@ with a direct return action. A protected 401 clears the session and all open
 routes; 403 preserves it. Duplicate reads and responses after disposal are guarded.
 The Update status button stays accessible at the bottom after a successful read.
 It passes the fresh task ID/status to the next destination and prevents duplicate
-navigation. That destination currently shows an unavailable message; saving a
-status and posting an optional comment belong to step 7.
+navigation. The status form offers the eight documented values and an optional
+note, with a single column on narrow screens or enlarged text. Save first sends
+only status with PUT; a nonempty trimmed note is then posted as a separate
+comment. Saving disables editing, submission and Back until both calls finish.
+Success returns to Details and reads the current task again. Returning to Tasks
+refreshes the collection while keeping the entered search and status filter.
+
+If status succeeds but the comment is explicitly rejected, the form reports
+Status saved, preserves the note and retries only the comment. A confirmed
+comment is never resubmitted. Connection loss, timeout, server 5xx or an unusable
+write response leave the outcome uncertain; the form preserves a copyable note
+and offers Check task details instead of another write. A missing task disables
+Save and returns to a fresh detail read. A failed read after saving offers GET
+Retry without repeating either write. Protected 401 still clears the session;
+403 retains the selected values, note and session.
 
 ## Run
 
@@ -90,9 +103,9 @@ lib/
   core/app_config.dart       API origin and tenant configuration.
   core/api_exception.dart    Useful API errors with HTTP status codes.
   models/                    Typed user, login session, project and task data.
-  services/                  HTTP, authentication, project/task reads and token storage.
+  services/                  HTTP, authentication, project/task reads and writes, token storage.
   controllers/               Session, projects and tasks state, loading and errors.
-  screens/                   Login, session check, Projects, Tasks, Details and status destination.
+  screens/                   Login, session check, Projects, Tasks, Details and status form.
   widgets/                   Brand logo, project/task cards and shared task badges.
 ```
 
@@ -109,8 +122,12 @@ the shared authenticated client. This endpoint returns the whole collection;
 no server search, status parameters or task pagination are used.
 Its `fetchTaskDetails` method reads `/api/tasks/:id` from the `task` envelope,
 checks the returned ID and reports malformed data as a read failure.
+`updateStatus` sends only `{status}` to `PUT /api/tasks/:id`. `addComment`
+sends `{task_id, content, mentioned_user_ids: []}` to `POST /api/tasks/comment`.
+`UpdateStatusController` sequences these operations, remembers acknowledged
+status saves and blocks duplicate submissions or uncertain write retries.
 
-Session, project, task-list and task-detail controllers use Flutter's `ChangeNotifier`;
+Session, project, task-list, task-detail and status controllers use Flutter's `ChangeNotifier`;
 `ListenableBuilder` rebuilds the interface when their state changes.
 Password visibility uses local `setState`
 because it only affects the form. Changing the authenticated user also resets
@@ -140,7 +157,7 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All 64 tests pass and `flutter analyze` reports no issues.
+All 93 tests pass and `flutter analyze` reports no issues.
 The tests cover validation, compact layout, password visibility, request
 payloads, profile parsing, duplicate submissions, token storage, restoration,
 401 versus 403, retained input on API failure, successful login and sign-out.
@@ -179,7 +196,23 @@ task's description, project, priority and dates. The supplied task had no
 assignees or returned comments, so both empty values were checked on Android.
 Scrolling, the fixed Update status action, its current task/status destination
 and return to the same detail fiche were verified. Multiple assignees and latest
-comment selection were checked with simulated responses. No task writes occurred.
+comment selection were checked with simulated responses. No task writes occurred
+during step 6.
 
-Update Status saving and optional comments are not implemented yet. There is no refresh-token or
-server logout endpoint in the assignment contract.
+Status tests cover exact PUT/POST bodies, ordering, whitespace-only notes,
+all eight values, duplicate clicks during both operations, rejected status,
+partial success and comment-only retry, uncertain writes, missing tasks,
+session expiry during either write, and disposal during saving. Widget tests
+also check enlarged text with a keyboard, locked controls and Android Back,
+current details/comments after Save or an uncertain response, failed refresh
+Retry, and retained filters after the task leaves the selected status.
+
+There is no refresh-token or server logout endpoint in the assignment contract.
+
+On Android, Update Status was visually inspected and used with the real API to
+change the assigned task from To do to In progress. Details reflected the saved
+status, and Android Back refreshed Tasks while retaining the To do filter,
+correctly showing no matching tasks. Selecting In progress showed the updated
+card. The task was then restored to its original To do status and verified with
+a fresh API read. Optional comments and partial failures were checked with
+simulated responses; the manual check added no real comments.

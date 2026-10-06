@@ -268,7 +268,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
     _openingTask = true;
     FocusScope.of(context).unfocus();
     // On transmet le bon ID, le projet et le service partage pour lire la fiche actuelle.
-    await Navigator.of(context).push<void>(
+    final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => TaskDetailsScreen(
           task: task,
@@ -277,8 +277,10 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
         ),
       ),
     );
-    // Le retour garde ce controller, son texte et son filtre sans nouveau GET.
-    if (mounted) _openingTask = false;
+    if (!mounted) return;
+    _openingTask = false;
+    // Une modification recharge la collection; recherche et filtre restent dans le controller.
+    if (changed == true) await _tasks.loadTasks();
   }
 
   Widget _buildMessage({
