@@ -6,7 +6,9 @@ import 'package:beemview/controllers/auth_controller.dart';
 import 'package:beemview/core/app_config.dart';
 import 'package:beemview/services/api_client.dart';
 import 'package:beemview/services/auth_service.dart';
+import 'package:beemview/services/session_store.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -16,6 +18,7 @@ void main() {
     'login keeps input on API failure then opens the session on retry',
     (tester) async {
       // L'API attend notre reponse pour verifier le vrai etat de chargement du form.
+      FlutterSecureStorage.setMockInitialValues({});
       const config = AppConfig(subdomain: 'test-tenant');
       var response = Completer<http.Response>();
       final client = ApiClient(
@@ -24,6 +27,7 @@ void main() {
       );
       final controller = AuthController(
         service: AuthService(client: client, config: config),
+        store: const SessionStore(),
       );
       addTearDown(client.close);
       addTearDown(controller.dispose);

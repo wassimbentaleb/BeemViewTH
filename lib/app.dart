@@ -7,6 +7,7 @@ import 'screens/login_screen.dart';
 import 'screens/projects_screen.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
+import 'services/session_store.dart';
 
 // Assemble les services et choisit l'ecran suivant l'etat de la session.
 class BeemViewApp extends StatefulWidget {
@@ -34,6 +35,7 @@ class _BeemViewAppState extends State<BeemViewApp> {
       _client = ApiClient(config: config);
       _auth = AuthController(
         service: AuthService(client: _client!, config: config),
+        store: const SessionStore(),
       );
     }
   }

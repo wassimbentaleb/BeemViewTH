@@ -1,8 +1,11 @@
 import 'package:beemview/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() {
+  // Les tests de formulaire commencent sans session et sans stockage natif reel.
+  setUp(() => FlutterSecureStorage.setMockInitialValues({}));
   testWidgets('invalid credentials stay in the form with useful errors', (
     tester,
   ) async {
@@ -11,6 +14,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const BeemViewApp());
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
@@ -43,6 +47,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewInsets);
     await tester.pumpWidget(const BeemViewApp());
+    await tester.pumpAndSettle();
 
     final passwordField = find.byType(TextFormField).at(1);
     await tester.ensureVisible(passwordField);

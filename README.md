@@ -4,9 +4,9 @@ A Flutter mobile app for the BeemView take-home assignment.
 
 ## Current step
 
-Login now calls the API, shows loading and retains input on errors.
-Success opens a temporary Projects landing page with the returned user name.
-The session is kept in memory only; token storage is the next change.
+Login now calls the API and saves the token with secure storage before
+opening the temporary Projects landing page. The password is not stored.
+Restoration after restarting the app and sign-out are the next changes.
 
 The form validates email/password, supports password visibility and autofill,
 and scrolls on small screens or when the keyboard opens. Project lists, tasks,
@@ -42,6 +42,8 @@ New logical blocks have short French comments explaining their purpose.
 ## Dependencies and checks
 
 `http` 1.6.0 handles JSON requests, bearer headers and a 20-second timeout.
+`flutter_secure_storage` 11.2.0 stores the token using platform secure storage.
+Android backup is disabled and iOS Keychain entitlements are configured.
 The brand image and Plus Jakarta Sans font are bundled locally; the font license
 is included in `assets/fonts/OFL.txt`. Credentials, tokens and previews are ignored.
 

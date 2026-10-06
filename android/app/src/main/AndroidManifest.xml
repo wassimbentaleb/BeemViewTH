@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Le token chiffre ne doit pas etre restaure avec une ancienne cle Android. -->
     <application
+        android:allowBackup="false"
         android:label="Beem View 360"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
