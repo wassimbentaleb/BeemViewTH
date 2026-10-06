@@ -21,8 +21,8 @@ duplicate requests and disappears after the final page. Its avatar opens the
 account menu with Sign out. Empty results show Reload; request failures show
 Retry. A failed next page keeps the loaded cards and retries the same offset.
 Selecting a project passes its ID and name to the Project Tasks destination.
-That screen currently shows an unavailable message; its API, task list, search
-and filters belong to step 5. Returning to Projects preserves its loaded list.
+That screen loads the selected project's tasks and displays API names, status,
+priority and available due dates. Returning to Projects preserves its loaded list.
 
 ## Run
 

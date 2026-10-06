@@ -7,6 +7,7 @@ import '../controllers/projects_controller.dart';
 import '../core/app_theme.dart';
 import '../models/project.dart';
 import '../services/project_service.dart';
+import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/project_card.dart';
 import 'project_tasks_screen.dart';
@@ -17,10 +18,12 @@ class ProjectsScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.service,
+    required this.taskService,
   });
 
   final AuthController controller;
   final ProjectService service;
+  final TaskService taskService;
 
   @override
   State<ProjectsScreen> createState() => _ProjectsScreenState();
@@ -158,7 +161,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     // Le projet type transporte son ID et son nom sans refaire un appel API.
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (context) => ProjectTasksScreen(project: project),
+        builder: (context) =>
+            ProjectTasksScreen(project: project, service: widget.taskService),
       ),
     );
     if (mounted) _openingProject = false;

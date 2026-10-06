@@ -16,8 +16,9 @@ import 'package:http/testing.dart';
 
 // Une session simulee permet de tester Projects dans le vrai arbre de l'app.
 AuthController createController(
-  Future<http.Response> Function(http.Request) projects,
-) {
+  Future<http.Response> Function(http.Request) projects, {
+  Future<http.Response> Function(http.Request)? tasks,
+}) {
   const config = AppConfig(subdomain: 'test-tenant');
   FlutterSecureStorage.setMockInitialValues({
     'beemview_auth_token': 'test-token',
@@ -27,6 +28,12 @@ AuthController createController(
     client: MockClient((request) async {
       if (request.url.path == '/api/users/me/profile') {
         return http.Response('{"user":{"id":12,"full_name":"Test User"}}', 200);
+      }
+      // Les tests Projects peuvent ouvrir Tasks sans simuler des appels de projet en plus.
+      if (request.url.path.startsWith('/api/tasks/project/')) {
+        return tasks == null
+            ? http.Response('{"tasks":[]}', 200)
+            : tasks(request);
       }
       expect(request.url.path, '/api/projects');
       return projects(request);
