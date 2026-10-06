@@ -26,6 +26,7 @@ class ProjectTasksScreen extends StatefulWidget {
 
 class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
   late final TasksController _tasks;
+  final _search = TextEditingController();
 
   @override
   void initState() {
@@ -40,6 +41,8 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
 
   @override
   void dispose() {
+    // Le champ de recherche appartient a cet ecran, comme le controller des tasks.
+    _search.dispose();
     _tasks.dispose();
     super.dispose();
   }
@@ -92,6 +95,33 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                         style: TextStyle(color: AppColors.muted, fontSize: 18),
                       ),
                       const SizedBox(height: 24),
+                      // Le nom est cherche dans les tasks deja chargees du projet.
+                      TextField(
+                        controller: _search,
+                        onChanged: _tasks.setQuery,
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                        decoration: InputDecoration(
+                          hintText: 'Search tasks by name',
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: _tasks.query.isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: 'Clear search',
+                                  icon: const Icon(Icons.close_rounded),
+                                  onPressed: () {
+                                    _search.clear();
+                                    _tasks.setQuery('');
+                                  },
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Filters apply to loaded tasks',
+                        style: TextStyle(color: AppColors.muted, fontSize: 14),
+                      ),
+                      const SizedBox(height: 24),
                       Row(
                         children: [
                           const Expanded(
@@ -104,7 +134,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                             ),
                           ),
                           Text(
-                            '${_tasks.tasks.length} tasks',
+                            '${_tasks.visibleTasks.length} tasks',
                             style: const TextStyle(
                               color: AppColors.muted,
                               fontSize: 16,
@@ -138,7 +168,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
     if (_tasks.error != null) return Text(_tasks.error!);
     return Column(
       children: [
-        for (final task in _tasks.tasks)
+        for (final task in _tasks.visibleTasks)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: TaskCard(task: task),

@@ -23,6 +23,8 @@ Retry. A failed next page keeps the loaded cards and retries the same offset.
 Selecting a project passes its ID and name to the Project Tasks destination.
 That screen loads the selected project's tasks and displays API names, status,
 priority and available due dates. Returning to Projects preserves its loaded list.
+Task name search runs locally, ignores case and surrounding spaces, and can be
+cleared without fetching the project collection again.
 
 ## Run
 

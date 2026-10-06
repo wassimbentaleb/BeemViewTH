@@ -15,6 +15,36 @@ const tasksResponse =
 
 void main() {
   testWidgets(
+    'name search ignores case and Clear search restores loaded cards',
+    (tester) async {
+      // Saisir et effacer le texte ne doit pas demander a nouveau les tasks.
+      var calls = 0;
+      final auth = createController(
+        (request) async => http.Response(projectResponse, 200),
+        tasks: (request) async {
+          calls++;
+          return http.Response(tasksResponse, 200);
+        },
+      );
+      await tester.pumpWidget(BeemViewApp(authController: auth));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Interview project'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), ' INSPECTION ');
+      await tester.pump();
+      expect(find.byType(TaskCard), findsOneWidget);
+      expect(find.text('1 tasks'), findsOneWidget);
+      expect(find.text('Review drawings'), findsNothing);
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pump();
+      expect(find.byType(TaskCard), findsNWidgets(2));
+      expect(calls, 1);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
     'selected project loads its tasks once and displays real task fields',
     (tester) async {
       // La reponse differee permet de verifier loading avant les cartes.
