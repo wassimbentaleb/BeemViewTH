@@ -1,73 +1,50 @@
 # Beem View 360
 
-A small Flutter mobile app for the BeemView take-home assignment.
-The app is being built one step at a time, starting with the supplied login design.
+A Flutter mobile app for the BeemView take-home assignment.
 
 ## Current step
 
-The login UI is implemented, including email/password validation, password
-visibility, autofill hints and a layout that scrolls on small screens or when
-the keyboard opens. The email shown in the design is a hint, not a saved value.
-The password starts empty.
+The login form is implemented. API origin and tenant configuration are
+now available; authentication is not connected yet.
 
-Authentication is not connected yet. Submitting a valid form shows that sign-in
-is not available; it does not create a session or navigate to Projects.
-Projects, tasks, task details and status updates are the next steps.
+The form validates email/password, supports password visibility and autofill,
+and scrolls on small screens or when the keyboard opens. Project lists, tasks,
+details and status updates have not been implemented yet.
 
-## Run
+## Run and configuration
 
 Built with Flutter 3.47.2 and Dart 3.13.2.
+Copy `config/app.example.json` to `config/app.local.json` and set the assigned
+tenant subdomain. The local file is ignored by Git and contains no password.
+The default API origin is `https://beemview.com`.
 
 ```sh
 flutter pub get
-flutter run
+flutter run --dart-define-from-file=config/app.local.json
 ```
 
-Choose a connected Android device or emulator. For a quick browser preview:
-
-```sh
-flutter run -d chrome
-```
+Enter email and password in the form; the tenant is app configuration.
+An Android device/emulator is the mobile target. A browser preview can use
+`flutter run -d chrome --dart-define-from-file=config/app.local.json`.
+API calls from a browser require the server to allow the preview origin via CORS.
+An iOS build requires macOS and Xcode.
 
 ## Structure
 
-```text
-lib/
-  main.dart                  Starts the app.
-  app.dart                   MaterialApp and the initial screen.
-  core/app_theme.dart        Shared colors, font, inputs and buttons.
-  core/validators.dart       Email and password rules.
-  screens/login_screen.dart  Login layout and form interaction.
-  widgets/brand_logo.dart    Shared brand symbol and wordmark.
-```
+`core/` contains shared theme, validation and configuration. API requests live
+in `services/`, response types in `models/`, state in `controllers/` and UI in
+`screens/`. Files are added when their behavior is implemented.
+The request flow is screen -> controller -> service -> API. Password visibility
+uses local `setState`; authentication uses `ChangeNotifier` and `ListenableBuilder`.
+New logical blocks have short French comments explaining their purpose.
 
-The screen uses `setState` for password visibility. That state only affects one
-widget, so it stays in the screen. The next step will add a `ChangeNotifier`
-controller for authentication, typed models and separate services for API calls
-and secure token storage. Those files will be added when they have real behavior.
+## Dependencies and checks
 
-The planned request flow is **screen -> controller -> service -> API**. Screens
-display state; controllers manage loading and errors; services call endpoints;
-models turn response JSON into Dart objects.
-
-## Configuration and dependencies
-
-No runtime packages beyond Flutter are needed for this UI step. The brand symbol
-and Plus Jakarta Sans font are bundled locally. The font's license is included in
-`assets/fonts/OFL.txt`.
-
-API origin and tenant subdomain configuration will be added with authentication.
-The tenant is configuration, not a third login field. Credentials and tokens
-will not be committed. Local reference images and temporary previews are ignored
-by Git.
-
-## Checks
+No additional runtime packages are needed at this step.
+The brand image and Plus Jakarta Sans font are bundled locally; the font license
+is included in `assets/fonts/OFL.txt`. Credentials, tokens and previews are ignored.
 
 ```sh
 flutter analyze
 flutter test
 ```
-
-The widget tests cover invalid form submission and password visibility with a
-compact viewport and keyboard insets. iOS source is included; an iOS build needs
-macOS and Xcode. The remaining API flow has not been implemented or tested.
