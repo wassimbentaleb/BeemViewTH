@@ -9,6 +9,7 @@ import '../models/task.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_card.dart';
+import 'task_details_screen.dart';
 
 // Charge les tasks du projet choisi et possede leur controller.
 class ProjectTasksScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class ProjectTasksScreen extends StatefulWidget {
 class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
   late final TasksController _tasks;
   final _search = TextEditingController();
+  bool _openingTask = false;
 
   @override
   void initState() {
@@ -218,11 +220,15 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
       );
     }
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final task in _tasks.visibleTasks)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: TaskCard(task: task),
+            child: TaskCard(
+              task: task,
+              onTap: () => unawaited(_openTask(task)),
+            ),
           ),
       ],
     );
@@ -254,6 +260,22 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
         shape: const StadiumBorder(),
       ),
     );
+  }
+
+  Future<void> _openTask(Task task) async {
+    // Un double toucher ne doit pas ouvrir deux routes de details.
+    if (_openingTask || _tasks.isLoading) return;
+    _openingTask = true;
+    FocusScope.of(context).unfocus();
+    // On transmet le bon ID et le projet; l'API Details sera ajoutee a l'etape 6.
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) =>
+            TaskDetailsScreen(task: task, project: widget.project),
+      ),
+    );
+    // Le retour garde ce controller, son texte et son filtre sans nouveau GET.
+    if (mounted) _openingTask = false;
   }
 
   Widget _buildMessage({

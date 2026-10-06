@@ -32,6 +32,10 @@ Failed reads show a useful message and Retry. Empty projects offer Reload;
 empty filter results offer Clear filters, which resets name and status locally.
 Retry preserves the entered search and selected status. A task API 401 returns
 to Login and clears the session; 403 leaves the session available for retry.
+Selecting a task passes its ID and project to the Task Details destination;
+double taps open only one route. Returning retains the loaded tasks, search and
+status filter. Details currently show an unavailable message; their API and
+full content belong to step 6.
 
 ## Run
 
@@ -70,10 +74,10 @@ lib/
   core/app_config.dart       API origin and tenant configuration.
   core/api_exception.dart    Useful API errors with HTTP status codes.
   models/                    Typed user, login session, project and task data.
-  services/                  HTTP, authentication, project pages and token storage.
-  controllers/               Session and projects state, loading and errors.
-  screens/                   Login, session check, Projects and task destination.
-  widgets/                   Brand logo and tappable project cards.
+  services/                  HTTP, authentication, project/task reads and token storage.
+  controllers/               Session, projects and tasks state, loading and errors.
+  screens/                   Login, session check, Projects, Tasks and detail destination.
+  widgets/                   Brand logo and tappable project/task cards.
 ```
 
 The request flow is **screen -> controller -> service -> API**. Screens
@@ -86,7 +90,7 @@ nullable, and preserves unfamiliar status labels. Numeric progress is ignored.
 the shared authenticated client. This endpoint returns the whole collection;
 no server search, status parameters or task pagination are used.
 
-`AuthController` and `ProjectsController` use Flutter's `ChangeNotifier`;
+`AuthController`, `ProjectsController` and `TasksController` use Flutter's `ChangeNotifier`;
 `ListenableBuilder` rebuilds the interface when their state changes.
 Password visibility uses local `setState`
 because it only affects the form. Changing the authenticated user also resets
@@ -116,7 +120,7 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All 27 tests pass and `flutter analyze` reports no issues.
+All 44 tests pass and `flutter analyze` reports no issues.
 The tests cover validation, compact layout, password visibility, request
 payloads, profile parsing, duplicate submissions, token storage, restoration,
 401 versus 403, retained input on API failure, successful login and sign-out.
@@ -124,8 +128,13 @@ Project tests also check data mapping, response envelopes, bearer headers,
 pagination parameters, duplicate IDs, retained cards on retry, empty states,
 401/403 session behavior, loading, long names with enlarged text, selected
 project IDs, return navigation and expiry while a project route is open.
+Task tests check list/detail field normalization, missing dates, all eight
+status filters combined with case-insensitive name search, duplicate loading,
+late responses after disposal, empty projects versus empty search results,
+Retry after network/403 errors, 401 route removal, keyboard layout with enlarged
+text, task selection, double taps and preserved filters on return.
 HTTP and storage are simulated in these tests. The real login/profile and
-project-list APIs have also been checked with the supplied test account.
+project-list and project-task APIs have also been checked with the supplied test account.
 
 The debug APK was built and installed on an Android API 36 emulator. Real form
 login, session restoration after a full app restart, and sign-out were verified
@@ -135,5 +144,11 @@ selection, return navigation and the account menu were also checked on Android.
 Multi-page behavior and failures were tested with simulated responses because
 the supplied account currently has fewer projects than the page size.
 
-Task endpoints are not implemented yet. There is no refresh-token or
+For Project Tasks, the updated debug APK displayed the three tasks returned for
+the selected project. Done filtering, name search, no matching results, clearing
+both filters, task selection and preserved search/status on return were checked
+on Android. The screen was visually inspected against the supplied design.
+No task status or comment was changed during step 5.
+
+Task Details and Update Status are not implemented yet. There is no refresh-token or
 server logout endpoint in the assignment contract.

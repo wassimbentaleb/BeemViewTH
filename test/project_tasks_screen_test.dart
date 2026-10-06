@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:beemview/app.dart';
+import 'package:beemview/screens/task_details_screen.dart';
 import 'package:beemview/widgets/task_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +16,60 @@ const tasksResponse =
     '{"tasks":[{"id":501,"name":"Site inspection","status":"to_do","priority":"High","dueDate":"2026-10-09"},{"id":502,"name":"Review drawings","status":"review","priority":"Low","dueDate":null}]}';
 
 void main() {
+  testWidgets(
+    'task selection passes the correct ID and Back retains name and status filters',
+    (tester) async {
+      // Le double toucher ouvre une seule route; le retour ne recharge pas la collection.
+      var calls = 0;
+      final auth = createController(
+        (request) async => http.Response(projectResponse, 200),
+        tasks: (request) async {
+          calls++;
+          return http.Response(tasksResponse, 200);
+        },
+      );
+      await tester.pumpWidget(BeemViewApp(authController: auth));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Interview project'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'drawings');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byTooltip('Filter: Review'));
+      await tester.tap(find.byTooltip('Filter: Review'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Review drawings'));
+      final card = tester.widget<TaskCard>(find.byType(TaskCard));
+      await tester.tap(find.text('Review drawings'));
+      // La seconde action appelle le meme callback avant la premiere frame de route.
+      card.onTap();
+      await tester.pumpAndSettle();
+      final screen = tester.widget<TaskDetailsScreen>(
+        find.byType(TaskDetailsScreen),
+      );
+      expect(screen.task.id, 502);
+      expect(screen.project.id, 102);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TaskDetailsScreen), findsNothing);
+      expect(find.byType(TaskCard), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        'drawings',
+      );
+      final chip = find.ancestor(
+        of: find.byTooltip('Filter: Review'),
+        matching: find.byType(ChoiceChip),
+      );
+      expect(tester.widget<ChoiceChip>(chip).selected, isTrue);
+      expect(calls, 1);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Projects'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   testWidgets(
     'empty project reloads and empty search results clear both filters',
     (tester) async {

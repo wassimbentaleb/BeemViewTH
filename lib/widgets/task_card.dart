@@ -5,9 +5,10 @@ import '../models/task.dart';
 
 // Affiche les informations demandees pour une task de la collection API.
 class TaskCard extends StatelessWidget {
-  const TaskCard({super.key, required this.task});
+  const TaskCard({super.key, required this.task, required this.onTap});
 
   final Task task;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -27,71 +28,85 @@ class TaskCard extends StatelessWidget {
       'low' => const Color(0xFF27A980),
       _ => AppColors.muted,
     };
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    // La carte annonce son action et affiche un retour visuel au toucher.
+    return Material(
+      color: Colors.white,
+      elevation: 1,
+      shadowColor: AppColors.text.withValues(alpha: 0.06),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0607182F),
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
+        side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            task.name,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Wrap laisse les badges passer a la ligne lorsque le texte est agrandi.
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _TaskBadge(label: task.statusLabel, color: statusColor),
-              _TaskBadge(
-                label: task.priorityLabel,
-                color: priorityColor,
-                showDot: true,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                size: 18,
-                color: AppColors.muted,
-              ),
-              const SizedBox(width: 10),
-              // La date garde son jour de calendrier API sans conversion de fuseau horaire.
-              Expanded(
-                child: Text(
-                  task.dueDate == null
-                      ? 'No due date'
-                      : 'Due ${_formatDate(task.dueDate!)}',
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 14,
-                    height: 1.5,
+              Row(
+                children: [
+                  // Le titre grandit sur plusieurs lignes en laissant la fleche visible.
+                  Expanded(
+                    child: Text(
+                      task.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        height: 1.4,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.muted,
+                    size: 26,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Wrap laisse les badges passer a la ligne lorsque le texte est agrandi.
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _TaskBadge(label: task.statusLabel, color: statusColor),
+                  _TaskBadge(
+                    label: task.priorityLabel,
+                    color: priorityColor,
+                    showDot: true,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 18,
+                    color: AppColors.muted,
+                  ),
+                  const SizedBox(width: 10),
+                  // La date garde son jour de calendrier API sans conversion de fuseau horaire.
+                  Expanded(
+                    child: Text(
+                      task.dueDate == null
+                          ? 'No due date'
+                          : 'Due ${_formatDate(task.dueDate!)}',
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
