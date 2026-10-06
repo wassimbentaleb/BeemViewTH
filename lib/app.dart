@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'controllers/auth_controller.dart';
@@ -5,6 +7,7 @@ import 'core/app_config.dart';
 import 'core/app_theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/projects_screen.dart';
+import 'screens/session_screen.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/session_store.dart';
@@ -38,6 +41,8 @@ class _BeemViewAppState extends State<BeemViewApp> {
         store: const SessionStore(),
       );
     }
+    // Le controller gere les erreurs; l'ecran attend son resultat.
+    unawaited(_auth.restoreSession());
   }
 
   @override
@@ -57,7 +62,9 @@ class _BeemViewAppState extends State<BeemViewApp> {
       listenable: _auth,
       builder: (context, child) {
         final Widget home;
-        if (_auth.user != null) {
+        if (_auth.isRestoring || _auth.restoreFailed) {
+          home = SessionScreen(controller: _auth);
+        } else if (_auth.user != null) {
           home = ProjectsScreen(controller: _auth);
         } else {
           home = LoginScreen(controller: _auth);

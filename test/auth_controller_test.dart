@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:beemview/controllers/auth_controller.dart';
+import 'package:beemview/core/api_exception.dart';
 import 'package:beemview/core/app_config.dart';
 import 'package:beemview/services/api_client.dart';
 import 'package:beemview/services/auth_service.dart';
@@ -67,4 +68,59 @@ void main() {
     expect(controller.user?.id, 12);
     expect(await store.readToken(), 'test-token');
   });
+
+  test(
+    '403 preserves saved session, retry restores it, 401 expires it',
+    () async {
+      var statusCode = 403;
+      final client = ApiClient(
+        config: config,
+        client: MockClient(
+          (request) async => http.Response(
+            jsonEncode(
+              statusCode == 200
+                  ? {
+                      'user': {'id': 12, 'full_name': 'Candidate'},
+                    }
+                  : {'message': 'Access denied'},
+            ),
+            statusCode,
+          ),
+        ),
+      );
+      final controller = AuthController(
+        service: AuthService(client: client, config: config),
+        store: store,
+      );
+      addTearDown(client.close);
+      addTearDown(controller.dispose);
+
+      // Un acces refuse propose Retry et ne detruit pas la session sauvegardee.
+      await store.saveToken('test-token');
+      await controller.restoreSession();
+      expect(controller.user, isNull);
+      expect(controller.restoreFailed, isTrue);
+      expect(controller.error, 'Access denied');
+      expect(await store.readToken(), 'test-token');
+
+      // Le nouvel essai valide le token grace au profil courant.
+      statusCode = 200;
+      await controller.restoreSession();
+      expect(controller.user?.fullName, 'Candidate');
+      expect(controller.restoreFailed, isFalse);
+      expect(controller.error, isNull);
+
+      // N'importe quelle route protegee en 401 efface la session et l'utilisateur.
+      statusCode = 401;
+      await expectLater(
+        client.get('/api/protected-test'),
+        throwsA(isA<ApiException>()),
+      );
+      expect(controller.user, isNull);
+      expect(controller.restoreFailed, isFalse);
+      expect(controller.error, contains('expired'));
+      expect(client.token, isNull);
+      expect(await store.readToken(), isNull);
+    },
+  );
 }

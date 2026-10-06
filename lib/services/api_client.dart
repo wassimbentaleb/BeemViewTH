@@ -19,6 +19,8 @@ class ApiClient {
   final http.Client _client;
   final Duration timeout;
   String? token;
+  // Le controller efface aussi le stockage quand une route signale un 401.
+  Future<void> Function()? onUnauthorized;
 
   Map<String, String> _headers(bool authenticated) {
     // Seules les routes protegees recoivent le token Bearer.
@@ -76,6 +78,7 @@ class ApiClient {
         // 401 invalide la session. 403 laisse le token intact.
         if (authenticated && response.statusCode == 401) {
           token = null;
+          await onUnauthorized?.call();
         }
         throw ApiException.fromResponse(response.statusCode, data ?? {});
       }

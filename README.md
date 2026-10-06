@@ -4,9 +4,10 @@ A Flutter mobile app for the BeemView take-home assignment.
 
 ## Current step
 
-Login now calls the API and saves the token with secure storage before
-opening the temporary Projects landing page. The password is not stored.
-Restoration after restarting the app and sign-out are the next changes.
+Login saves the token securely. On restart, the current-user profile
+validates the saved token before opening the authenticated landing page.
+A protected 401 clears the session; a network error or 403 preserves the
+saved token and offers Retry. Local sign-out is the next change.
 
 The form validates email/password, supports password visibility and autofill,
 and scrolls on small screens or when the keyboard opens. Project lists, tasks,
