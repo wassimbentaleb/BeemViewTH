@@ -158,7 +158,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
       );
     }
-    if (_projects.error != null) {
+    if (_projects.error != null && _projects.projects.isEmpty) {
       return Text(_projects.error!);
     }
     // Les couleurs sont decoratives; les noms et IDs viennent toujours de l'API.
@@ -174,6 +174,35 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               highlighted: index == 0,
             ),
           ),
+        // La page suivante conserve les cartes et desactive le bouton pendant l'appel.
+        if (_projects.hasMore) ...[
+          const SizedBox(height: 4),
+          OutlinedButton.icon(
+            onPressed: _projects.isLoadingMore ? null : _projects.loadMore,
+            iconAlignment: IconAlignment.end,
+            icon: _projects.isLoadingMore
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.arrow_forward_rounded),
+            label: Text(_projects.isLoadingMore ? 'Loading...' : 'Load more'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 48),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

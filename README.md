@@ -15,9 +15,10 @@ opening the authenticated area. A protected HTTP 401 clears the session. HTTP
 403 or a network failure during restoration keeps the saved token and offers
 Retry or an explicit return to login. Signing out clears the local session.
 
-The authenticated Projects screen loads the first page of projects from the API
-and shows the user's name. Its avatar opens the account menu with Sign out.
-Pagination and project selection are being added next; task screens follow later.
+The authenticated Projects screen loads projects in pages of ten and shows the
+user's name. Load more appends the next page, replaces duplicate IDs, blocks
+duplicate requests and disappears after the final page. Its avatar opens the
+account menu with Sign out. Project selection and task screens follow later.
 
 ## Run
 

@@ -41,6 +41,45 @@ AuthController createController(
 }
 
 void main() {
+  testWidgets(
+    'load more keeps cards visible and disappears after the final page',
+    (tester) async {
+      // Une vraie action UI attend la seconde page et bloque un nouvel envoi.
+      final secondPage = Completer<http.Response>();
+      final offsets = <String>[];
+      final controller = createController((request) async {
+        final offset = request.url.queryParameters['offset']!;
+        offsets.add(offset);
+        if (offset == '1') return secondPage.future;
+        return http.Response(
+          '{"data":[{"id":101,"name":"Assigned project"}],"total":2}',
+          200,
+        );
+      });
+      await tester.pumpWidget(BeemViewApp(authController: controller));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Load more'));
+      await tester.pump();
+      expect(find.text('Assigned project'), findsOneWidget);
+      expect(
+        tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
+        isNull,
+      );
+      secondPage.complete(
+        http.Response(
+          '{"data":[{"id":102,"name":"Next project"}],"total":2}',
+          200,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Next project'), findsOneWidget);
+      expect(find.text('Load more'), findsNothing);
+      expect(offsets, ['0', '1']);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   testWidgets('projects show loading then real API names', (tester) async {
     // La reponse reste en attente pour observer le chargement de l'interface.
     final response = Completer<http.Response>();
