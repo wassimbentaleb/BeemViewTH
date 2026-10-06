@@ -88,6 +88,26 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<void> signOut() async {
+    // Le logout est local; aucun endpoint de deconnexion n'est necessaire.
+    if (_isLoading || _isRestoring) return;
+    _isLoading = true;
+    _error = null;
+    _notify();
+    try {
+      // On confirme l'effacement avant de quitter la session courante.
+      await store.clearToken();
+      service.clearSession();
+      _user = null;
+      _restoreFailed = false;
+    } on Exception {
+      _error = 'Could not clear your session. Please try again.';
+    } finally {
+      _isLoading = false;
+      _notify();
+    }
+  }
+
   Future<void> _expireSession() async {
     // Un 401 protege retire tout de suite l'acces aux ecrans connectes.
     // Bloque aussi une nouvelle connexion tant que l'ancien token est efface.

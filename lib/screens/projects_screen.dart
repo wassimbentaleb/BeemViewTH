@@ -13,7 +13,18 @@ class ProjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const BrandLogo(), centerTitle: true),
+      appBar: AppBar(
+        title: const BrandLogo(),
+        centerTitle: true,
+        actions: [
+          // La deconnexion efface le token local avant de revenir au Login.
+          IconButton(
+            tooltip: 'Sign out',
+            onPressed: controller.isLoading ? null : controller.signOut,
+            icon: const Icon(Icons.logout_rounded),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -38,6 +49,14 @@ class ProjectsScreen extends StatelessWidget {
                 'You are signed in.',
                 style: TextStyle(color: AppColors.muted, fontSize: 16),
               ),
+              // Un echec du logout reste visible et peut etre retente.
+              if (controller.error != null) ...[
+                const SizedBox(height: 20),
+                Text(
+                  controller.error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
             ],
           ),
         ),

@@ -62,7 +62,7 @@ void main() {
         '123456',
       );
 
-      // Un succes ouvre l'accueil avec le nom reel.
+      // Un succes ouvre l'accueil avec le nom reel; le logout revient au formulaire vide.
       response = Completer<http.Response>();
       await tester.ensureVisible(find.text('Sign in'));
       await tester.tap(find.text('Sign in'));
@@ -77,6 +77,13 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Hello, Test User'), findsOneWidget);
+      await tester.tap(find.byTooltip('Sign out'));
+      await tester.pumpAndSettle();
+      expect(find.text('Welcome back'), findsOneWidget);
+      expect(
+        tester.widget<TextFormField>(fields.at(1)).controller!.text,
+        isEmpty,
+      );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },

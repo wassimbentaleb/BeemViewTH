@@ -45,10 +45,14 @@ class SessionScreen extends StatelessWidget {
                       style: const TextStyle(color: AppColors.muted),
                     ),
                     const SizedBox(height: 24),
-                    // Retry utilise le token sauvegarde pour verifier de nouveau le profil.
+                    // Retry garde le token; Sign in efface la session sur demande.
                     FilledButton(
                       onPressed: busy ? null : controller.restoreSession,
                       child: const Text('Retry'),
+                    ),
+                    TextButton(
+                      onPressed: busy ? null : controller.signOut,
+                      child: const Text('Sign in'),
                     ),
                   ],
                 ],
