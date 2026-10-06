@@ -23,7 +23,13 @@ void main() {
       var response = Completer<http.Response>();
       final client = ApiClient(
         config: config,
-        client: MockClient((request) => response.future),
+        client: MockClient((request) {
+          // L'accueil lit sa propre liste apres la reponse de connexion.
+          if (request.url.path == '/api/projects') {
+            return Future.value(http.Response('{"data":[],"total":0}', 200));
+          }
+          return response.future;
+        }),
       );
       final controller = AuthController(
         service: AuthService(client: client, config: config),
@@ -77,7 +83,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Hello, Test User'), findsOneWidget);
-      await tester.tap(find.byTooltip('Sign out'));
+      // La deconnexion reste accessible depuis l'avatar de la maquette.
+      await tester.tap(find.byTooltip('Account'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
       expect(find.text('Welcome back'), findsOneWidget);
       expect(

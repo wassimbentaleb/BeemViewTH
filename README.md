@@ -15,9 +15,9 @@ opening the authenticated area. A protected HTTP 401 clears the session. HTTP
 403 or a network failure during restoration keeps the saved token and offers
 Retry or an explicit return to login. Signing out clears the local session.
 
-The authenticated Projects screen is a temporary landing page showing the user's
-name and sign-out action. Project lists, tasks, details and status updates are
-the next steps.
+The authenticated Projects screen loads the first page of projects from the API
+and shows the user's name. Its avatar opens the account menu with Sign out.
+Pagination and project selection are being added next; task screens follow later.
 
 ## Run
 
@@ -57,8 +57,8 @@ lib/
   core/api_exception.dart    Useful API errors with HTTP status codes.
   models/                    Typed user, login session and project data.
   services/                  HTTP, authentication, project pages and token storage.
-  controllers/               Authentication state, loading and errors.
-  screens/                   Login, session check and temporary Projects page.
+  controllers/               Session and projects state, loading and errors.
+  screens/                   Login, session check and Projects list.
   widgets/brand_logo.dart    Shared brand symbol and wordmark.
 ```
 
@@ -95,14 +95,16 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-The seven tests cover validation, compact layout, password visibility, request
+The tests cover validation, compact layout, password visibility, request
 payloads, profile parsing, duplicate submissions, token storage, restoration,
 401 versus 403, retained input on API failure, successful login and sign-out.
-HTTP and storage are simulated in these tests. The real login/profile API has
-also been checked with the supplied test account.
+Project tests also check data mapping, response envelopes, bearer headers,
+pagination parameters, loading and long names with enlarged text.
+HTTP and storage are simulated in these tests. The real login/profile and
+project-list APIs have also been checked with the supplied test account.
 
 The debug APK was built and installed on an Android API 36 emulator. Real form
 login, session restoration after a full app restart, and sign-out were verified.
 
-Project/task endpoints are not implemented yet. There is no refresh-token or
+Task endpoints are not implemented yet. There is no refresh-token or
 server logout endpoint in the assignment contract.

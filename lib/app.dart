@@ -10,6 +10,7 @@ import 'screens/projects_screen.dart';
 import 'screens/session_screen.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
+import 'services/project_service.dart';
 import 'services/session_store.dart';
 
 // Assemble les services et choisit l'ecran suivant l'etat de la session.
@@ -25,6 +26,7 @@ class BeemViewApp extends StatefulWidget {
 
 class _BeemViewAppState extends State<BeemViewApp> {
   late final AuthController _auth;
+  late final ProjectService _projects;
   ApiClient? _client;
 
   @override
@@ -41,6 +43,8 @@ class _BeemViewAppState extends State<BeemViewApp> {
         store: const SessionStore(),
       );
     }
+    // Projects partage le client et le token, y compris avec l'API simulee des tests.
+    _projects = ProjectService(client: _auth.service.client);
     // Le controller gere les erreurs; l'ecran attend son resultat.
     unawaited(_auth.restoreSession());
   }
@@ -65,7 +69,7 @@ class _BeemViewAppState extends State<BeemViewApp> {
         if (_auth.isRestoring || _auth.restoreFailed) {
           home = SessionScreen(controller: _auth);
         } else if (_auth.user != null) {
-          home = ProjectsScreen(controller: _auth);
+          home = ProjectsScreen(controller: _auth, service: _projects);
         } else {
           home = LoginScreen(controller: _auth);
         }
