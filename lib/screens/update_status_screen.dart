@@ -6,6 +6,7 @@ import '../controllers/update_status_controller.dart';
 import '../core/app_theme.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
+import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/theme_toggle_button.dart';
 
@@ -77,8 +78,8 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
               onPressed: _update.isSaving ? null : _leave,
             ),
             title: const BrandLogo(),
-            centerTitle: true,
-            toolbarHeight: 76,
+            centerTitle: false,
+            toolbarHeight: 56,
             backgroundColor: AppColors.of(context).background,
             scrolledUnderElevation: 0,
             actions: const [ThemeToggleButton()],
@@ -90,18 +91,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             ),
             child: _buildSaveAction(),
           ),
-          body: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.of(context).gradient,
-                  AppColors.of(context).background,
-                ],
-                stops: [0, 0.5],
-              ),
-            ),
+          body: AppBackdrop(
             child: SafeArea(
               top: false,
               child: Align(
@@ -109,67 +99,69 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 440),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Update status',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w800,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    child: AppEntrance(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Update status',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildTaskHeader(),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Choose a status',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildStatusChoices(),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Note (optional)',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Le texte reste selectionnable pour copier une note dont le resultat est incertain.
-                        TextField(
-                          key: const ValueKey('status-note'),
-                          controller: _note,
-                          onChanged: _update.setNote,
-                          readOnly: !_update.canEditNote,
-                          minLines: 3,
-                          maxLines: 6,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: const InputDecoration(
-                            hintText: 'Add a note about this update',
-                            labelText: 'Optional note',
-                            alignLabelWithHint: true,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Your note will be added as a comment.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            height: 1.5,
-                            color: AppColors.of(context).muted,
-                          ),
-                        ),
-                        if (_update.error != null) ...[
                           const SizedBox(height: 20),
-                          _buildFeedback(),
+                          _buildTaskHeader(),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Choose a status',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStatusChoices(),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Note (optional)',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Le texte reste selectionnable pour copier une note dont le resultat est incertain.
+                          TextField(
+                            key: const ValueKey('status-note'),
+                            controller: _note,
+                            onChanged: _update.setNote,
+                            readOnly: !_update.canEditNote,
+                            minLines: 3,
+                            maxLines: 6,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: const InputDecoration(
+                              hintText: 'Add a note about this update',
+                              labelText: 'Optional note',
+                              alignLabelWithHint: true,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Your note will be added as a comment.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: AppColors.of(context).muted,
+                            ),
+                          ),
+                          if (_update.error != null) ...[
+                            const SizedBox(height: 20),
+                            _buildFeedback(),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -224,14 +216,17 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
             child: FilledButton.icon(
               onPressed: _update.canSave ? () => unawaited(_save()) : null,
               icon: _update.isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.of(context).onPrimary,
+                      ),
                     )
                   : const Icon(Icons.check_rounded),
               label: Text(label),
@@ -311,20 +306,15 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
 
   Widget _buildTaskHeader() {
     // Le status courant change seulement apres confirmation du PUT par le serveur.
-    return Container(
+    return AppSurface(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.of(context).surface,
-        border: Border.all(color: AppColors.of(context).border),
-        borderRadius: BorderRadius.circular(14),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             widget.task.name,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 18,
               height: 1.4,
               fontWeight: FontWeight.w700,
             ),
@@ -332,7 +322,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
           const SizedBox(height: 8),
           Text(
             'Current status: ${_update.currentStatusLabel}',
-            style: TextStyle(fontSize: 16, color: AppColors.of(context).muted),
+            style: TextStyle(fontSize: 14, color: AppColors.of(context).muted),
           ),
         ],
       ),
@@ -373,7 +363,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             ? AppColors.of(context).selected
             : AppColors.of(context).surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           side: BorderSide(
             color: selected
                 ? AppColors.of(context).primary
@@ -382,14 +372,14 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
         ),
         child: InkWell(
           key: ValueKey('status-$status'),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           onTap: _update.canEditStatus
               ? () => _update.selectStatus(status)
               : null,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
+            constraints: const BoxConstraints(minHeight: 56),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(
                 children: [
                   ExcludeSemantics(
@@ -397,13 +387,13 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                       selected
                           ? Icons.radio_button_checked
                           : Icons.radio_button_off,
-                      size: 24,
+                      size: 20,
                       color: selected
                           ? AppColors.of(context).primary
                           : AppColors.of(context).muted,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       Task.statusLabels[status]!,

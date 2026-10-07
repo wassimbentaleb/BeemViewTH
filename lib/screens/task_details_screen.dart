@@ -8,10 +8,11 @@ import '../core/date_formatter.dart';
 import '../models/project.dart';
 import '../models/task.dart';
 import '../models/task_comment.dart';
-import '../models/user.dart';
 import '../services/task_service.dart';
+import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_badges.dart';
+import '../widgets/task_info_card.dart';
 import '../widgets/theme_toggle_button.dart';
 import 'update_status_screen.dart';
 
@@ -69,26 +70,15 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           appBar: AppBar(
             leading: BackButton(onPressed: _backToTasks),
             title: const BrandLogo(),
-            centerTitle: true,
-            toolbarHeight: 76,
+            centerTitle: false,
+            toolbarHeight: 56,
             backgroundColor: AppColors.of(context).background,
             scrolledUnderElevation: 0,
             actions: const [ThemeToggleButton()],
           ),
           // Le fond discret, les titres et les panneaux suivent la maquette Details.
           bottomNavigationBar: _buildStatusAction(),
-          body: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.of(context).gradient,
-                  AppColors.of(context).background,
-                ],
-                stops: [0, 0.5],
-              ),
-            ),
+          body: AppBackdrop(
             child: SafeArea(
               top: false,
               child: Align(
@@ -96,10 +86,12 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 440),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: _buildContent(),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    child: AppEntrance(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: _buildContent(),
+                      ),
                     ),
                   ),
                 ),
@@ -125,7 +117,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
             child: FilledButton.icon(
               onPressed: () => unawaited(_openStatus()),
               iconAlignment: IconAlignment.end,
@@ -203,13 +195,13 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       Text(
         details.task.name,
         style: const TextStyle(
-          fontSize: 30,
+          fontSize: 28,
           fontWeight: FontWeight.w800,
           height: 1.3,
         ),
       ),
       const SizedBox(height: 16),
-      TaskBadges(task: details.task, fontSize: 16),
+      TaskBadges(task: details.task),
       const SizedBox(height: 20),
       _buildPanel(
         child: Column(
@@ -219,68 +211,16 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
               'Description',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Text(
               details.description ?? 'No description provided.',
-              style: const TextStyle(fontSize: 16, height: 1.6),
+              style: const TextStyle(fontSize: 14, height: 1.6),
             ),
           ],
         ),
       ),
       const SizedBox(height: 14),
-      _buildPanel(
-        child: Column(
-          children: [
-            // Le projet retourne est prioritaire; celui de la navigation sert de fallback.
-            _buildInfoRow(
-              'Project',
-              Text((details.project ?? widget.project).name),
-            ),
-            Divider(height: 28, color: AppColors.of(context).border),
-            _buildInfoRow(
-              'Assigned to',
-              details.assignees.isEmpty
-                  ? Text(
-                      'Unassigned',
-                      style: TextStyle(color: AppColors.of(context).muted),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (
-                          var index = 0;
-                          index < details.assignees.length;
-                          index++
-                        )
-                          Padding(
-                            padding: EdgeInsets.only(top: index == 0 ? 0 : 12),
-                            child: _buildAssignee(details.assignees[index]),
-                          ),
-                      ],
-                    ),
-            ),
-            Divider(height: 28, color: AppColors.of(context).border),
-            // Start et due sont des dates de calendrier; leur absence reste explicite.
-            _buildInfoRow(
-              'Start date',
-              Text(
-                details.task.startedDate == null
-                    ? 'No start date'
-                    : DateFormatter.date(details.task.startedDate!),
-              ),
-            ),
-            Divider(height: 28, color: AppColors.of(context).border),
-            _buildInfoRow(
-              'Due date',
-              Text(
-                details.task.dueDate == null
-                    ? 'No due date'
-                    : DateFormatter.date(details.task.dueDate!),
-              ),
-            ),
-          ],
-        ),
-      ),
+      TaskInfoCard(details: details, project: widget.project),
       const SizedBox(height: 14),
       _buildComment(details.latestComment),
     ];
@@ -338,58 +278,6 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, Widget value) {
-    // Deux colonnes sur mobile normal; presentation verticale si largeur/police exigent plus de place.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final labelWidget = Text(
-          label,
-          style: TextStyle(
-            color: AppColors.of(context).muted,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        );
-        final valueWidget = DefaultTextStyle(
-          style: TextStyle(
-            fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
-            color: AppColors.of(context).text,
-            fontSize: 14,
-            height: 1.5,
-          ),
-          child: value,
-        );
-        if (constraints.maxWidth < 280 ||
-            MediaQuery.textScalerOf(context).scale(14) > 20) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [labelWidget, const SizedBox(height: 8), valueWidget],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 2, child: labelWidget),
-            const SizedBox(width: 12),
-            Expanded(flex: 3, child: valueWidget),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildAssignee(User user) {
-    // Chaque personne est affichee; la premiere lettre est une decoration, pas une photo.
-    final name = user.fullName.trim().isEmpty ? 'User' : user.fullName.trim();
-    return Row(
-      children: [
-        _buildAvatar(name, radius: 16),
-        const SizedBox(width: 10),
-        Expanded(child: Text(name)),
-      ],
     );
   }
 
@@ -472,26 +360,6 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     );
   }
 
-  Widget _buildPanel({required Widget child}) {
-    // Les informations de la fiche utilisent le meme panneau et les memes marges.
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.of(context).surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.of(context).border.withValues(alpha: 0.35),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.of(context).shadow.withValues(alpha: 0.016),
-            blurRadius: 16,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
+  // Les panneaux partagent les memes marges que les nouvelles cartes.
+  Widget _buildPanel({required Widget child}) => AppSurface(child: child);
 }

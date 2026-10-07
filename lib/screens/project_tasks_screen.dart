@@ -7,6 +7,7 @@ import '../core/app_theme.dart';
 import '../models/project.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
+import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_card.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -58,25 +59,14 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
       builder: (context, child) => Scaffold(
         appBar: AppBar(
           title: const BrandLogo(),
-          centerTitle: true,
-          toolbarHeight: 76,
+          centerTitle: false,
+          toolbarHeight: 56,
           backgroundColor: AppColors.of(context).background,
           scrolledUnderElevation: 0,
           actions: const [ThemeToggleButton()],
         ),
         // Le fond, le titre et les cartes reprennent la maquette Project Tasks.
-        body: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.of(context).gradient,
-                AppColors.of(context).background,
-              ],
-              stops: [0, 0.5],
-            ),
-          ),
+        body: AppBackdrop(
           child: SafeArea(
             top: false,
             child: Align(
@@ -84,7 +74,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -92,20 +82,20 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                       Text(
                         widget.project.name,
                         style: const TextStyle(
-                          fontSize: 30,
+                          fontSize: 28,
                           fontWeight: FontWeight.w800,
                           height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
                         'Project tasks',
                         style: TextStyle(
                           color: AppColors.of(context).muted,
-                          fontSize: 18,
+                          fontSize: 14,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       // Le nom est cherche dans les tasks deja chargees du projet.
                       TextField(
                         controller: _search,
@@ -127,7 +117,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       // Les huit statuses restent accessibles en faisant defiler les chips.
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -139,15 +129,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Filters apply to loaded tasks',
-                        style: TextStyle(
-                          color: AppColors.of(context).muted,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
                       // Wrap garde le compteur lisible meme avec une grande police.
                       Wrap(
                         alignment: WrapAlignment.spaceBetween,
@@ -158,7 +140,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                           const Text(
                             'Tasks',
                             style: TextStyle(
-                              fontSize: 26,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -167,7 +149,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                               '${_tasks.visibleTasks.length} ${_tasks.visibleTasks.length == 1 ? 'task' : 'tasks'}',
                               style: TextStyle(
                                 color: AppColors.of(context).muted,
-                                fontSize: 16,
+                                fontSize: 13,
                               ),
                             ),
                         ],
@@ -186,14 +168,9 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
   }
 
   Widget _buildTasks() {
-    // Le spinner disparait des que la collection complete est disponible.
+    // Les placeholders disparaissent des que la collection est disponible.
     if (_tasks.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
-        child: Center(
-          child: CircularProgressIndicator(semanticsLabel: 'Loading tasks'),
-        ),
-      );
+      return const LoadingCards(label: 'Loading tasks', tasks: true);
     }
     // Le vide du serveur et le vide des filtres demandent des actions differentes.
     if (_tasks.error != null) {
@@ -233,12 +210,16 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final task in _tasks.visibleTasks)
+        for (var i = 0; i < _tasks.visibleTasks.length; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: TaskCard(
-              task: task,
-              onTap: () => unawaited(_openTask(task)),
+            child: AppEntrance(
+              key: ValueKey(_tasks.visibleTasks[i].id),
+              order: i,
+              child: TaskCard(
+                task: _tasks.visibleTasks[i],
+                onTap: () => unawaited(_openTask(_tasks.visibleTasks[i])),
+              ),
             ),
           ),
       ],
@@ -262,9 +243,9 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
           color: selected
               ? AppColors.of(context).onPrimary
               : AppColors.of(context).text,
-          fontSize: 14,
+          fontSize: 12,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         side: BorderSide(
           color: selected
               ? AppColors.of(context).primary
@@ -304,14 +285,8 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
     required VoidCallback onAction,
   }) {
     // Les etats de lecture partagent un panneau simple avec une action explicite.
-    return Container(
-      width: double.infinity,
+    return AppSurface(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.of(context).surface,
-        border: Border.all(color: AppColors.of(context).border),
-        borderRadius: BorderRadius.circular(14),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

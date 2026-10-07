@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:beemview/app.dart';
 import 'package:beemview/screens/task_details_screen.dart';
+import 'package:beemview/widgets/app_surface.dart';
 import 'package:beemview/widgets/task_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -330,7 +331,7 @@ void main() {
       await tester.tap(find.text('Interview project'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(LoadingCards), findsOneWidget);
       response.complete(http.Response(tasksResponse, 200));
       await tester.pumpAndSettle();
       expect(find.byType(TaskCard), findsNWidgets(2));
