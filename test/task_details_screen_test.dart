@@ -235,7 +235,7 @@ void main() {
   );
 
   testWidgets(
-    'details display project every assignee and all available dates',
+    'details display project every assignee and start and due dates',
     (tester) async {
       // Les informations viennent de Details, y compris un projet renomme depuis la liste.
       final data = jsonDecode(detailResponse) as Map<String, dynamic>;
@@ -257,8 +257,9 @@ void main() {
       expect(find.text('Colleague'), findsOneWidget);
       expect(find.text('Oct 6, 2026'), findsOneWidget);
       expect(find.text('Oct 9, 2026'), findsOneWidget);
-      expect(find.text('Created'), findsOneWidget);
-      expect(find.text('Updated'), findsOneWidget);
+      // La fiche garde les dates de planning, meme si l'API fournit ses horodatages.
+      expect(find.text('Created'), findsNothing);
+      expect(find.text('Updated'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },

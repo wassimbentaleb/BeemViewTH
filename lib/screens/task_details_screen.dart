@@ -273,21 +273,6 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                     : DateFormatter.date(details.task.dueDate!),
               ),
             ),
-            // Les instants supplementaires ne sont affiches que lorsqu'ils existent.
-            if (details.createdAt != null) ...[
-              const Divider(height: 28, color: AppColors.border),
-              _buildInfoRow(
-                'Created',
-                Text(DateFormatter.timestamp(details.createdAt!)),
-              ),
-            ],
-            if (details.updatedAt != null) ...[
-              const Divider(height: 28, color: AppColors.border),
-              _buildInfoRow(
-                'Updated',
-                Text(DateFormatter.timestamp(details.updatedAt!)),
-              ),
-            ],
           ],
         ),
       ),

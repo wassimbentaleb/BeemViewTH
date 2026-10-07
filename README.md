@@ -10,7 +10,7 @@ BeemView API.
 - Secure token storage, session restoration and local sign-out.
 - Projects with pagination and a Load more action.
 - Project tasks with name search and all eight status filters applied locally.
-- Task details with description, project, assignees, dates and latest returned comment.
+- Task details with description, project, assignees, start/due dates and latest returned comment.
 - Status update with an optional note posted as a separate comment.
 
 Loading, empty results and failed reads have dedicated states. A protected 401
