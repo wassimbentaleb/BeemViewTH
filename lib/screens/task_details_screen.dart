@@ -9,6 +9,7 @@ import '../models/project.dart';
 import '../models/task.dart';
 import '../models/task_comment.dart';
 import '../services/task_service.dart';
+import '../widgets/app_motion.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_badges.dart';
@@ -118,11 +119,13 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: FilledButton.icon(
-              onPressed: () => unawaited(_openStatus()),
-              iconAlignment: IconAlignment.end,
-              icon: const Icon(Icons.arrow_forward_rounded),
-              label: const Text('Update status'),
+            child: AppPressScale(
+              child: FilledButton.icon(
+                onPressed: () => unawaited(_openStatus()),
+                iconAlignment: IconAlignment.end,
+                icon: const Icon(Icons.arrow_forward_rounded),
+                label: const Text('Update status'),
+              ),
             ),
           ),
         ),
@@ -175,14 +178,8 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     if (_details.isLoading) {
       return [
         label,
-        const Padding(
-          padding: EdgeInsets.all(40),
-          child: Center(
-            child: CircularProgressIndicator(
-              semanticsLabel: 'Loading task details',
-            ),
-          ),
-        ),
+        const SizedBox(height: 12),
+        const LoadingCards(label: 'Loading task details', tasks: true),
       ];
     }
     final details = _details.details;
@@ -258,21 +255,27 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
             ),
             const SizedBox(height: 20),
             if (missing)
-              FilledButton.icon(
-                onPressed: _backToTasks,
-                icon: const Icon(Icons.arrow_back_rounded),
-                label: const Text('Back to tasks'),
+              AppPressScale(
+                child: FilledButton.icon(
+                  onPressed: _backToTasks,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Back to tasks'),
+                ),
               )
             else ...[
-              FilledButton.icon(
-                onPressed: _details.loadDetails,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
+              AppPressScale(
+                child: FilledButton.icon(
+                  onPressed: _details.loadDetails,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
+                ),
               ),
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: _backToTasks,
-                child: const Text('Back to tasks'),
+              AppPressScale(
+                child: TextButton(
+                  onPressed: _backToTasks,
+                  child: const Text('Back to tasks'),
+                ),
               ),
             ],
           ],

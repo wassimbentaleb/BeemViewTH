@@ -7,6 +7,7 @@ import '../core/app_theme.dart';
 import '../models/project.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
+import '../widgets/app_motion.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_card.dart';
@@ -155,7 +156,10 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _buildTasks(),
+                      AppResultFade(
+                        revision: (_tasks.query, _tasks.status),
+                        child: _buildTasks(),
+                      ),
                     ],
                   ),
                 ),
@@ -212,6 +216,7 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
       children: [
         for (var i = 0; i < _tasks.visibleTasks.length; i++)
           Padding(
+            key: ValueKey(_tasks.visibleTasks[i].id),
             padding: const EdgeInsets.only(bottom: 10),
             child: AppEntrance(
               key: ValueKey(_tasks.visibleTasks[i].id),
@@ -232,6 +237,8 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
+        // Les controllers natifs relisent la duree si la preference change.
+        key: ValueKey((value, MediaQuery.disableAnimationsOf(context))),
         label: Text(label),
         tooltip: 'Filter: $label',
         selected: selected,
@@ -252,6 +259,18 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
               : AppColors.of(context).border.withValues(alpha: 0.6),
         ),
         shape: const StadiumBorder(),
+        chipAnimationStyle: ChipAnimationStyle(
+          selectAnimation: AnimationStyle(
+            duration: AppMotion.duration(context),
+            reverseDuration: AppMotion.duration(context),
+          ),
+          enableAnimation: AnimationStyle(
+            duration: AppMotion.duration(context),
+            reverseDuration: AppMotion.duration(context),
+          ),
+          avatarDrawerAnimation: AnimationStyle.noAnimation,
+          deleteDrawerAnimation: AnimationStyle.noAnimation,
+        ),
       ),
     );
   }
@@ -306,7 +325,9 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          FilledButton(onPressed: onAction, child: Text(actionLabel)),
+          AppPressScale(
+            child: FilledButton(onPressed: onAction, child: Text(actionLabel)),
+          ),
         ],
       ),
     );

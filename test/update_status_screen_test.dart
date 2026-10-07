@@ -6,6 +6,7 @@ import 'package:beemview/models/task.dart';
 import 'package:beemview/screens/update_status_screen.dart';
 import 'package:beemview/services/api_client.dart';
 import 'package:beemview/services/task_service.dart';
+import 'package:beemview/widgets/app_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -16,6 +17,7 @@ Future<void> showUpdateForm(
   String status = 'review',
   String name = 'Site inspection',
   TextScaler textScaler = TextScaler.noScaling,
+  bool reducedMotion = false,
   Future<http.Response> Function(http.Request)? handler,
 }) async {
   // Ce helper utilise le vrai formulaire avec le client HTTP simule.
@@ -33,7 +35,8 @@ Future<void> showUpdateForm(
     MaterialApp(
       theme: AppTheme.light,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: textScaler, disableAnimations: reducedMotion),
         child: child!,
       ),
       home: Builder(
@@ -105,7 +108,13 @@ void main() {
     await tester.pump();
     expect(find.text('Saving comment...'), findsOneWidget);
     expect(methods, ['PUT', 'POST']);
+    expect(find.byType(AppSuccessCheck), findsNothing);
     post.complete(http.Response('{}', 201));
+    await tester.pump();
+    expect(find.byType(AppSuccessCheck), findsOneWidget);
+    expect(find.text('Saved'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(find.byType(UpdateStatusScreen), findsOneWidget);
     await tester.pumpAndSettle();
     expect(find.byType(UpdateStatusScreen), findsNothing);
     expect(find.text('Changed: true'), findsOneWidget);
@@ -142,12 +151,41 @@ void main() {
     expect(tester.widget<TextField>(note).controller!.text, 'Keep the note');
     expect(tester.widget<TextField>(note).readOnly, isFalse);
     expect(find.text('Current status: In progress'), findsOneWidget);
+    expect(find.byType(AppSuccessCheck), findsNothing);
     await tester.tap(find.text('Retry comment'));
     await tester.pumpAndSettle();
     expect(methods, ['PUT', 'POST', 'POST']);
     expect(find.text('Changed: true'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets(
+    'confirmed save returns immediately when reduced motion is enabled',
+    (tester) async {
+      var writes = 0;
+      await showUpdateForm(
+        tester,
+        reducedMotion: true,
+        handler: (_) async {
+          writes++;
+          return http.Response('{}', 200);
+        },
+      );
+      await tester.tap(find.text('Save status'));
+      // Deux frames sans avancer le temps suffisent a confirmer puis rendre le resultat.
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Changed: true'), findsWidgets);
+      expect(
+        Navigator.of(tester.element(find.text('Open update'))).canPop(),
+        isFalse,
+      );
+      expect(writes, 1);
+      await tester.pumpAndSettle();
+      expect(find.byType(UpdateStatusScreen), findsNothing);
+      expect(find.text('Changed: true'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'lost comment response offers verification instead of resubmission',
@@ -170,6 +208,7 @@ void main() {
       await tester.tap(find.text('Save status'));
       await tester.pumpAndSettle();
       expect(find.text('Check task details'), findsOneWidget);
+      expect(find.byType(AppSuccessCheck), findsNothing);
       expect(tester.widget<TextField>(note).controller!.text, 'Preserved note');
       expect(
         tester

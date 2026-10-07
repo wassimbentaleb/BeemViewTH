@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../controllers/auth_controller.dart';
 import '../core/app_theme.dart';
+import '../widgets/app_motion.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -33,7 +34,10 @@ class SessionScreen extends StatelessWidget {
                         const SizedBox(height: 32),
                         // Pendant le chargement, aucun ecran protege n'est affiche.
                         if (controller.isRestoring) ...[
-                          const CircularProgressIndicator(),
+                          const LoadingCards(
+                            label: 'Restoring your session',
+                            count: 2,
+                          ),
                           const SizedBox(height: 20),
                           const Text('Restoring your session…'),
                         ] else ...[
@@ -54,13 +58,21 @@ class SessionScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
                           // Retry garde le token; Sign in efface la session sur demande.
-                          FilledButton(
-                            onPressed: busy ? null : controller.restoreSession,
-                            child: const Text('Retry'),
+                          AppPressScale(
+                            enabled: !busy,
+                            child: FilledButton(
+                              onPressed: busy
+                                  ? null
+                                  : controller.restoreSession,
+                              child: const Text('Retry'),
+                            ),
                           ),
-                          TextButton(
-                            onPressed: busy ? null : controller.signOut,
-                            child: const Text('Sign in'),
+                          AppPressScale(
+                            enabled: !busy,
+                            child: TextButton(
+                              onPressed: busy ? null : controller.signOut,
+                              child: const Text('Sign in'),
+                            ),
                           ),
                         ],
                       ],

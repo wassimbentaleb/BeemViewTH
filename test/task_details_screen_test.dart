@@ -5,6 +5,7 @@ import 'package:beemview/app.dart';
 import 'package:beemview/controllers/auth_controller.dart';
 import 'package:beemview/core/date_formatter.dart';
 import 'package:beemview/screens/update_status_screen.dart';
+import 'package:beemview/widgets/app_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -277,7 +278,7 @@ void main() {
         return response.future;
       });
       await openDetails(tester, auth);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(LoadingCards), findsOneWidget);
       expect(find.text('Update status'), findsNothing);
       response.complete(http.Response(detailResponse, 200));
       await tester.pumpAndSettle();

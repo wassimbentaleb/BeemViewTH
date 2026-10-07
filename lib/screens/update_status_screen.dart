@@ -6,6 +6,7 @@ import '../controllers/update_status_controller.dart';
 import '../core/app_theme.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
+import '../widgets/app_motion.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -30,6 +31,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
   final _note = TextEditingController();
   final _feedbackKey = GlobalKey();
   bool _leaving = false;
+  bool _showSuccess = false;
 
   // Cet ordre suit la maquette; les labels restent centralises dans Task.
   static const _statusOrder = [
@@ -180,7 +182,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
     await _update.save();
     if (!mounted) return;
     if (_update.isComplete) {
-      _leave();
+      setState(() => _showSuccess = true);
     } else if (_update.error != null) {
       // Le message reste visible apres une sauvegarde depuis le bas du formulaire.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -189,7 +191,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
           unawaited(
             Scrollable.ensureVisible(
               feedback,
-              duration: const Duration(milliseconds: 200),
+              duration: AppMotion.duration(context),
             ),
           );
         }
@@ -206,7 +208,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
 
   Widget _buildSaveAction() {
     // Le bouton fixe reste accessible; la note refusee reutilise uniquement POST.
-    final label = _update.isSaving
+    final label = _showSuccess
+        ? 'Saved'
+        : _update.isSaving
         ? (_update.statusSaved ? 'Saving comment...' : 'Saving status...')
         : (_update.statusSaved ? 'Retry comment' : 'Save status');
     return SafeArea(
@@ -217,19 +221,35 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: FilledButton.icon(
-              onPressed: _update.canSave ? () => unawaited(_save()) : null,
-              icon: _update.isSaving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.of(context).onPrimary,
-                      ),
-                    )
-                  : const Icon(Icons.check_rounded),
-              label: Text(label),
+            child: Semantics(
+              liveRegion: _showSuccess,
+              child: AppPressScale(
+                enabled: _update.canSave,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    disabledBackgroundColor: _showSuccess
+                        ? AppColors.of(context).primary
+                        : null,
+                    disabledForegroundColor: _showSuccess
+                        ? AppColors.of(context).onPrimary
+                        : null,
+                  ),
+                  onPressed: _update.canSave ? () => unawaited(_save()) : null,
+                  icon: _showSuccess
+                      ? AppSuccessCheck(onCompleted: _leave)
+                      : _update.isSaving
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.of(context).onPrimary,
+                          ),
+                        )
+                      : const Icon(Icons.check_rounded),
+                  label: Text(label),
+                ),
+              ),
             ),
           ),
         ),
@@ -287,14 +307,16 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             ],
             if (_update.taskChanged || _update.isNotFound) ...[
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: _leave,
-                child: Text(
-                  _update.outcomeUnknown
-                      ? 'Check task details'
-                      : (_update.isNotFound
-                            ? 'Back to details'
-                            : 'Return without note'),
+              AppPressScale(
+                child: TextButton(
+                  onPressed: _leave,
+                  child: Text(
+                    _update.outcomeUnknown
+                        ? 'Check task details'
+                        : (_update.isNotFound
+                              ? 'Back to details'
+                              : 'Return without note'),
+                  ),
                 ),
               ),
             ],
@@ -359,6 +381,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
       inMutuallyExclusiveGroup: true,
       enabled: _update.canEditStatus,
       child: Material(
+        animationDuration: AppMotion.duration(context),
         color: selected
             ? AppColors.of(context).selected
             : AppColors.of(context).surface,
