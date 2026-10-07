@@ -46,6 +46,7 @@ class ApiClient {
         headers: _headers(true),
       ),
       authenticated: true,
+      sessionToken: token,
     );
   }
 
@@ -62,6 +63,7 @@ class ApiClient {
         body: jsonEncode(body),
       ),
       authenticated: authenticated,
+      sessionToken: authenticated ? token : null,
       isWrite: authenticated,
     );
   }
@@ -75,6 +77,7 @@ class ApiClient {
         body: jsonEncode(body),
       ),
       authenticated: true,
+      sessionToken: token,
       isWrite: true,
     );
   }
@@ -82,6 +85,7 @@ class ApiClient {
   Future<Map<String, dynamic>> _readResponse(
     Future<http.Response> request, {
     required bool authenticated,
+    required String? sessionToken,
     bool isWrite = false,
   }) async {
     // Le delai couvre la requete et la lecture de sa reponse.
@@ -99,8 +103,11 @@ class ApiClient {
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        // 401 invalide la session. 403 laisse le token intact.
-        if (authenticated && response.statusCode == 401) {
+        // Un ancien 401 ne doit pas effacer un nouveau token obtenu pendant l'appel.
+        // Le 401 du token courant invalide la session; 403 la conserve toujours.
+        if (authenticated &&
+            response.statusCode == 401 &&
+            token == sessionToken) {
           token = null;
           await onUnauthorized?.call();
         }
