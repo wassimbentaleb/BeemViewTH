@@ -5,6 +5,12 @@ BeemView API.
 
 ## Features
 
+- Native Android and iOS launch screens center the original BeemView logo on a
+  light or navy background matching the device appearance. Android 12+ has a
+  padded icon to keep all four logo corners visible inside its
+  [system mask](https://developer.android.com/develop/ui/views/launch/splash-screen#dimensions).
+  Startup has no added delay. On Windows, `tool/generate_splash_assets.ps1`
+  regenerates the native assets from the original PNG without changing its pixels.
 - Login with email/password validation on leaving a field or submitting,
   loading and readable API errors.
 - Secure token storage, session restoration and local sign-out. The account

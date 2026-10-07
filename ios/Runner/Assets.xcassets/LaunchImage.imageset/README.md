@@ -1,5 +1,10 @@
 # Launch Screen Assets
 
-You can customize the launch screen with your own desired assets by replacing the image files in this directory.
+These images are exact copies of `assets/images/beemview-logo.png`. The launch
+storyboard fixes the logo at 128 points and uses aspect fit on every display.
 
-You can also do it by opening your Flutter project's Xcode project with `open ios/Runner.xcworkspace`, selecting `Runner/Assets.xcassets` in the Project Navigator and dropping in the desired images.
+Regenerate the Android and iOS launch assets on Windows from the repository root:
+
+```powershell
+./tool/generate_splash_assets.ps1
+```

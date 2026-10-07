@@ -6,7 +6,7 @@ import 'app_icons.dart';
 
 // Le status porte la couleur forte; la priorite reste une information secondaire.
 class TaskBadges extends StatelessWidget {
-  const TaskBadges({super.key, required this.task, this.fontSize = 13});
+  const TaskBadges({super.key, required this.task, this.fontSize = 12});
   final Task task;
   final double fontSize;
 
@@ -23,7 +23,7 @@ class TaskBadges extends StatelessWidget {
 }
 
 class TaskStatusBadge extends StatelessWidget {
-  const TaskStatusBadge({super.key, required this.task, this.fontSize = 12});
+  const TaskStatusBadge({super.key, required this.task, this.fontSize = 11});
   final Task task;
   final double fontSize;
 
@@ -55,7 +55,7 @@ class TaskStatusBadge extends StatelessWidget {
         task.status == 'canceled';
     final foreground = neutral ? colors.muted : Colors.white;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: neutral
             ? colors.subtle
@@ -67,10 +67,10 @@ class TaskStatusBadge extends StatelessWidget {
         children: [
           ExcludeSemantics(
             child: task.status == 'in_progress'
-                ? TaskProgressIcon(color: foreground)
-                : Icon(icon, size: 15, color: foreground),
+                ? TaskProgressIcon(color: foreground, size: 12)
+                : Icon(icon, size: 12, color: foreground),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           Flexible(
             child: Text(
               task.statusLabel,
@@ -78,7 +78,7 @@ class TaskStatusBadge extends StatelessWidget {
                 color: foreground,
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                height: 1.3,
+                height: 1.2,
               ),
             ),
           ),
@@ -95,24 +95,40 @@ class TaskPriority extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
     final color = switch (task.priority) {
-      'urgent' ||
-      'high' => dark ? const Color(0xFFFFA096) : const Color(0xFFBE3545),
-      'medium' => dark ? const Color(0xFFFFCC70) : const Color(0xFF906200),
-      _ => AppColors.of(context).muted,
+      'urgent' => dark ? const Color(0xFFFF9AAE) : const Color(0xFFE66A82),
+      'high' => dark ? const Color(0xFFFFB39F) : const Color(0xFFED806D),
+      'medium' => dark ? const Color(0xFFFFD45D) : const Color(0xFFF0B429),
+      'low' => dark ? const Color(0xFF82DDCB) : const Color(0xFF3AB6A2),
+      _ => colors.muted,
     };
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         ExcludeSemantics(
-          child: Icon(Icons.flag_rounded, size: 14, color: color),
+          // Les accents restent vifs; le texte neutre garde une lecture discrete.
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: dark ? 0.16 : 0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(Icons.flag_rounded, size: 13, color: color),
+          ),
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: 6),
         Flexible(
           child: Text(
             task.priorityLabel,
-            style: TextStyle(color: color, fontSize: fontSize, height: 1.4),
+            style: TextStyle(
+              color: colors.muted,
+              fontSize: fontSize,
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
           ),
         ),
       ],
