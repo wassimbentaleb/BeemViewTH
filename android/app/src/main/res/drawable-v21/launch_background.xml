@@ -2,9 +2,9 @@
 <!-- La meme marque et le meme fond sont utilises sur les anciens Android. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
-    <item android:width="128dp" android:height="128dp" android:gravity="center">
+    <item android:width="288dp" android:height="288dp" android:gravity="center">
         <bitmap
             android:gravity="fill"
-            android:src="@drawable/beemview_logo" />
+            android:src="@drawable/beemview_splash" />
     </item>
 </layer-list>
