@@ -7,7 +7,10 @@ BeemView API.
 
 - Login with email/password validation on leaving a field or submitting,
   loading and readable API errors.
-- Secure token storage, session restoration and local sign-out.
+- Secure token storage, session restoration and local sign-out. The account
+  avatar opens a sheet with the current name/email and Cancel/Sign out actions.
+  Signing out locks dismissal and duplicate submissions until local storage is
+  cleared; a failure preserves the session and offers an inline retry.
 - Projects loaded five at a time with pagination and a Load more action.
 - Project tasks with name search and all eight status filters applied locally.
 - Task details with description, project, assignees, start/due dates and latest returned comment.
@@ -151,7 +154,7 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All **115 tests** pass; formatting and analysis report no issues. Tests cover
+All **120 tests** pass; formatting and analysis report no issues. Tests cover
 response mapping, pagination, filters, session storage/expiry, delayed old-token
 401s, duplicate reads/saves, late responses, partial saves, uncertain comments,
 refresh and preserved filters, and narrow layouts with enlarged text and a keyboard.
@@ -161,6 +164,10 @@ Design tests check five projects plus Load more and four tasks on the connected
 phone's viewport in both themes, side-by-side and stacked
 dates, all assignees with enlarged text, and immediate content with reduced motion.
 HTTP/storage are simulated in automated tests.
+
+Sign-out tests cover cancellation, outside dismissal, duplicate taps, blocked
+Back during deletion, storage failures with retry, and light/dark layouts with
+enlarged text and reduced motion.
 
 Motion tests cover staggered entrances timed to page transitions, quick press
 feedback, button activation/cancellation without

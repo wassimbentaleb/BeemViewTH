@@ -12,6 +12,7 @@ import '../widgets/app_motion.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/project_card.dart';
+import '../widgets/sign_out_sheet.dart';
 import '../widgets/theme_toggle_button.dart';
 import 'project_tasks_screen.dart';
 
@@ -35,6 +36,7 @@ class ProjectsScreen extends StatefulWidget {
 class _ProjectsScreenState extends State<ProjectsScreen> {
   late final ProjectsController _projects;
   bool _openingProject = false;
+  bool _showingAccount = false;
 
   @override
   void initState() {
@@ -66,25 +68,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           scrolledUnderElevation: 0,
           actions: [
             const ThemeToggleButton(),
-            // L'avatar ouvre le menu du compte et conserve la deconnexion locale.
+            // L'avatar ouvre une confirmation avant d'effacer la session locale.
             Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: PopupMenuButton<String>(
-                tooltip: 'Account',
+              padding: const EdgeInsets.only(right: 8),
+              child: AppPressScale(
                 enabled: !widget.controller.isLoading,
-                onSelected: (action) {
-                  if (action == 'sign_out') {
-                    unawaited(widget.controller.signOut());
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'sign_out', child: Text('Sign out')),
-                ],
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.of(context).avatar,
-                  foregroundColor: AppColors.of(context).avatarText,
-                  child: Text(initial.toUpperCase()),
+                child: IconButton(
+                  tooltip: 'Account',
+                  onPressed: widget.controller.isLoading
+                      ? null
+                      : () => unawaited(_openAccount()),
+                  icon: Semantics(
+                    label: 'Account',
+                    excludeSemantics: true,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: AppColors.of(context).avatar,
+                      foregroundColor: AppColors.of(context).avatarText,
+                      child: Text(initial.toUpperCase()),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -151,6 +154,17 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openAccount() async {
+    // Deux pressions rapides ne doivent pas empiler les confirmations.
+    if (_showingAccount || widget.controller.isLoading) return;
+    _showingAccount = true;
+    try {
+      await showSignOutSheet(context, widget.controller);
+    } finally {
+      if (mounted) _showingAccount = false;
+    }
   }
 
   Future<void> _openProject(Project project) async {
