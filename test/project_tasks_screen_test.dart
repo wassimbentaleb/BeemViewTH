@@ -5,6 +5,7 @@ import 'package:beemview/app.dart';
 import 'package:beemview/screens/task_details_screen.dart';
 import 'package:beemview/widgets/app_surface.dart';
 import 'package:beemview/widgets/task_card.dart';
+import 'package:beemview/core/deadline_countdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -336,7 +337,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(TaskCard), findsNWidgets(2));
       expect(find.text('Site inspection'), findsOneWidget);
-      expect(find.text('Due Oct 9, 2026'), findsOneWidget);
+      expect(
+        find.text(
+          DeadlineCountdown.at(
+            DateTime(2026, 10, 9),
+            now: DateTime.now(),
+          ).label,
+        ),
+        findsOneWidget,
+      );
+      expect(find.byTooltip('Oct 9, 2026'), findsOneWidget);
       expect(find.text('No due date'), findsOneWidget);
       expect(find.text('2 tasks'), findsOneWidget);
       expect(calls, 1);

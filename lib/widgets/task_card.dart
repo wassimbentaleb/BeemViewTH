@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
-import '../core/date_formatter.dart';
 import '../models/task.dart';
 import 'app_surface.dart';
 import 'task_badges.dart';
+import 'task_deadline.dart';
 
 // Le titre et le status se lisent avant la priorite et la date plus discretes.
 class TaskCard extends StatelessWidget {
-  const TaskCard({super.key, required this.task, required this.onTap});
+  const TaskCard({
+    super.key,
+    required this.task,
+    required this.onTap,
+    this.now,
+  });
   final Task task;
   final VoidCallback onTap;
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context) => AppSurface(
@@ -43,37 +49,17 @@ class TaskCard extends StatelessWidget {
         const SizedBox(height: 6),
         TaskStatusBadge(task: task),
         const SizedBox(height: 6),
-        // Wrap garde les deux informations entieres sur petit ecran/grande police.
-        Wrap(
-          spacing: 16,
-          runSpacing: 6,
-          crossAxisAlignment: WrapCrossAlignment.center,
+        // La priorite reste a gauche; le delai est toujours aligne a droite.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            TaskPriority(task: task),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ExcludeSemantics(
-                  child: Icon(
-                    Icons.calendar_month_outlined,
-                    size: 14,
-                    color: AppColors.of(context).muted,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    task.dueDate == null
-                        ? 'No due date'
-                        : 'Due ${DateFormatter.date(task.dueDate!)}',
-                    style: TextStyle(
-                      color: AppColors.of(context).muted,
-                      fontSize: 12,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
+            Expanded(child: TaskPriority(task: task)),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TaskDeadline(task: task, now: now),
+              ),
             ),
           ],
         ),
