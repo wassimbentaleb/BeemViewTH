@@ -98,6 +98,15 @@ class _BeemViewAppState extends State<BeemViewApp> {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: _theme.mode,
+            themeAnimationDuration: const Duration(milliseconds: 240),
+            themeAnimationStyle:
+                WidgetsBinding
+                    .instance
+                    .platformDispatcher
+                    .accessibilityFeatures
+                    .disableAnimations
+                ? AnimationStyle.noAnimation
+                : null,
             home: home,
           );
         },
