@@ -5,7 +5,8 @@ BeemView API.
 
 ## Features
 
-- Login with email/password validation, loading and readable API errors.
+- Login with email/password validation on leaving a field or submitting,
+  loading and readable API errors.
 - Secure token storage, session restoration and local sign-out.
 - Projects with pagination and a Load more action.
 - Project tasks with name search and all eight status filters applied locally.
@@ -120,7 +121,7 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All **96 tests** pass; formatting and analysis report no issues. Tests cover
+All **97 tests** pass; formatting and analysis report no issues. Tests cover
 response mapping, pagination, filters, session storage/expiry, delayed old-token
 401s, duplicate reads/saves, late responses, partial saves, uncertain comments,
 refresh and preserved filters, and narrow layouts with enlarged text and a keyboard.

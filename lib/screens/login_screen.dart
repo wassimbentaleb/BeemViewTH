@@ -169,10 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('Email', style: labelStyle),
               const SizedBox(height: 8),
               TextFormField(
-                // L'email se valide localement et se nettoie dans le service.
+                // L'email se valide en quittant le champ ou via Sign in, pas a chaque lettre.
                 enabled: !widget.controller.isLoading,
                 controller: _emailController,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
+                autovalidateMode: AutovalidateMode.onUnfocus,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.username],
@@ -188,10 +188,10 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('Password', style: labelStyle),
               const SizedBox(height: 8),
               TextFormField(
-                // On garde la saisie exacte du password et on bloque l'edition en cours.
+                // Meme validation apres sortie; la saisie exacte du password est conservee.
                 enabled: !widget.controller.isLoading,
                 controller: _passwordController,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
+                autovalidateMode: AutovalidateMode.onUnfocus,
                 obscureText: _hidePassword,
                 autocorrect: false,
                 enableSuggestions: false,
