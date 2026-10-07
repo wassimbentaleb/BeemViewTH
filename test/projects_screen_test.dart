@@ -8,6 +8,7 @@ import 'package:beemview/screens/project_tasks_screen.dart';
 import 'package:beemview/services/api_client.dart';
 import 'package:beemview/services/auth_service.dart';
 import 'package:beemview/services/session_store.dart';
+import 'package:beemview/widgets/app_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -294,7 +295,7 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(find.text('Hello, Test User'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(LoadingCards), findsOneWidget);
     response.complete(
       http.Response(
         jsonEncode({
@@ -310,7 +311,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Assigned project'), findsOneWidget);
     expect(find.text('Second project'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byType(LoadingCards), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });

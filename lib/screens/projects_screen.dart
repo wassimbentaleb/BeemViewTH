@@ -8,6 +8,7 @@ import '../core/app_theme.dart';
 import '../models/project.dart';
 import '../services/project_service.dart';
 import '../services/task_service.dart';
+import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/project_card.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -58,15 +59,15 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       builder: (context, child) => Scaffold(
         appBar: AppBar(
           title: const BrandLogo(),
-          centerTitle: true,
-          toolbarHeight: 76,
+          centerTitle: false,
+          toolbarHeight: 56,
           backgroundColor: AppColors.of(context).background,
           scrolledUnderElevation: 0,
           actions: [
             const ThemeToggleButton(),
             // L'avatar ouvre le menu du compte et conserve la deconnexion locale.
             Padding(
-              padding: const EdgeInsets.only(right: 20),
+              padding: const EdgeInsets.only(right: 12),
               child: PopupMenuButton<String>(
                 tooltip: 'Account',
                 enabled: !widget.controller.isLoading,
@@ -79,8 +80,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   PopupMenuItem(value: 'sign_out', child: Text('Sign out')),
                 ],
                 child: CircleAvatar(
-                  backgroundColor: AppColors.of(context).subtle,
-                  foregroundColor: AppColors.of(context).text,
+                  radius: 18,
+                  backgroundColor: AppColors.of(context).avatar,
+                  foregroundColor: AppColors.of(context).avatarText,
                   child: Text(initial.toUpperCase()),
                 ),
               ),
@@ -88,18 +90,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           ],
         ),
         // Le fond discret et les espacements reprennent la maquette Projects.
-        body: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.of(context).gradient,
-                AppColors.of(context).background,
-              ],
-              stops: [0, 0.5],
-            ),
-          ),
+        body: AppBackdrop(
           child: SafeArea(
             top: false,
             child: Align(
@@ -107,32 +98,34 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'Projects',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
                       Text(
                         'Hello, $name',
-                        style: const TextStyle(
-                          fontSize: 20,
+                        style: TextStyle(
+                          color: AppColors.of(context).muted,
+                          fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 8),
+                      const Text(
+                        'Projects',
+                        style: TextStyle(
+                          fontSize: 30,
+                          height: 1.2,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
                       Text(
                         'Choose a project to view its tasks.',
                         style: TextStyle(
                           color: AppColors.of(context).muted,
-                          fontSize: 16,
+                          fontSize: 14,
                           height: 1.5,
                         ),
                       ),
@@ -176,14 +169,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Widget _buildProjects() {
     // Une copie stable sert aux cartes et a leurs callbacks pendant ce rebuild.
     final projects = _projects.projects;
-    // Le spinner remplace les cartes uniquement pendant le premier chargement.
+    // Les placeholders remplacent les cartes uniquement au premier chargement.
     if (_projects.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
-        child: Center(
-          child: CircularProgressIndicator(semanticsLabel: 'Loading projects'),
-        ),
-      );
+      return const LoadingCards(label: 'Loading projects');
     }
     if (_projects.error != null && projects.isEmpty) {
       // Un echec initial propose un nouvel essai de la premiere page.
@@ -210,19 +198,23 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     // Les couleurs sont decoratives; les noms et IDs viennent toujours de l'API.
     final colors = [
       AppColors.of(context).primary,
-      Color(0xFF00B88D),
       AppColors.of(context).amber,
+      const Color(0xFF9480DC),
+      const Color(0xFF27A980),
     ];
     return Column(
       children: [
         for (var index = 0; index < projects.length; index++)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: ProjectCard(
-              project: projects[index],
-              color: colors[index % colors.length],
-              highlighted: index == 0,
-              onTap: () => unawaited(_openProject(projects[index])),
+            child: AppEntrance(
+              key: ValueKey(projects[index].id),
+              order: index,
+              child: ProjectCard(
+                project: projects[index],
+                color: colors[index % colors.length],
+                onTap: () => unawaited(_openProject(projects[index])),
+              ),
             ),
           ),
         // La page suivante conserve les cartes et desactive le bouton pendant l'appel.
@@ -260,7 +252,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               ),
               textStyle: const TextStyle(
                 fontFamily: 'PlusJakartaSans',
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -278,14 +270,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     String actionLabel = 'Retry',
   }) {
     // Les etats vide et erreur partagent un petit panneau lisible avec une action.
-    return Container(
-      width: double.infinity,
+    return AppSurface(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.of(context).surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.of(context).border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

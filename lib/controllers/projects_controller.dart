@@ -8,6 +8,9 @@ import '../services/project_service.dart';
 class ProjectsController extends ChangeNotifier {
   ProjectsController({required this.service});
 
+  // Cinq projets gardent Load more accessible sur le telephone de reference.
+  static const pageSize = 5;
+
   final ProjectService service;
   List<Project> _projects = [];
   bool _isLoading = false;
@@ -42,6 +45,7 @@ class ProjectsController extends ChangeNotifier {
     _notify();
     try {
       final page = await service.fetchProjects(
+        limit: pageSize,
         offset: append ? _nextOffset : 0,
       );
       if (_disposed) return;

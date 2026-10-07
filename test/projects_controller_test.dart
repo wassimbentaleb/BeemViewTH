@@ -22,6 +22,36 @@ ProjectsController createController(
 }
 
 void main() {
+  test('projects load five at a time and stop after the final page', () async {
+    // Chaque clic ajoute cinq projets, puis la derniere page incomplete.
+    final offsets = <int>[];
+    final controller = createController((request) async {
+      expect(request.url.queryParameters['limit'], '5');
+      final offset = int.parse(request.url.queryParameters['offset']!);
+      offsets.add(offset);
+      return http.Response(
+        jsonEncode({
+          'total': 12,
+          'data': [
+            for (var i = offset; i < offset + 5 && i < 12; i++)
+              {'id': i + 1, 'name': 'Project ${i + 1}'},
+          ],
+        }),
+        200,
+      );
+    });
+    addTearDown(controller.dispose);
+    await controller.loadProjects();
+    expect(controller.projects.length, 5);
+    expect(controller.hasMore, isTrue);
+    await controller.loadMore();
+    expect(controller.projects.length, 10);
+    await controller.loadMore();
+    expect(controller.projects.length, 12);
+    expect(controller.hasMore, isFalse);
+    await controller.loadMore();
+    expect(offsets, [0, 5, 10]);
+  });
   test(
     'failed initial load retries offset zero and clears the error',
     () async {
