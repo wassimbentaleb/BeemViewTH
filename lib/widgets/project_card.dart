@@ -22,15 +22,15 @@ class ProjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Material et InkWell donnent le retour visuel et l'action accessible au clic.
     return Material(
-      color: Colors.white,
+      color: AppColors.of(context).surface,
       elevation: highlighted ? 0 : 1,
-      shadowColor: AppColors.text.withValues(alpha: 0.06),
+      shadowColor: AppColors.of(context).shadow.withValues(alpha: 0.06),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
           color: highlighted
-              ? AppColors.primary.withValues(alpha: 0.55)
-              : const Color(0xFFE8EDF5),
+              ? AppColors.of(context).primary.withValues(alpha: 0.55)
+              : AppColors.of(context).subtle,
         ),
       ),
       child: InkWell(
@@ -65,17 +65,20 @@ class ProjectCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Project',
-                      style: TextStyle(color: AppColors.muted, fontSize: 15),
+                      style: TextStyle(
+                        color: AppColors.of(context).muted,
+                        fontSize: 15,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.muted,
+                color: AppColors.of(context).muted,
                 size: 28,
               ),
             ],

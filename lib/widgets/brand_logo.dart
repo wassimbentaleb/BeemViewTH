@@ -22,15 +22,15 @@ class BrandLogo extends StatelessWidget {
           ),
           SizedBox(width: large ? 14 : 8),
           Text.rich(
-            const TextSpan(
+            TextSpan(
               children: [
                 TextSpan(
                   text: 'Beem View ',
-                  style: TextStyle(color: AppColors.primary),
+                  style: TextStyle(color: AppColors.of(context).primary),
                 ),
                 TextSpan(
                   text: '360',
-                  style: TextStyle(color: AppColors.amber),
+                  style: TextStyle(color: AppColors.of(context).amber),
                 ),
               ],
             ),

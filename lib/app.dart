@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'controllers/auth_controller.dart';
+import 'controllers/theme_controller.dart';
 import 'core/app_config.dart';
 import 'core/app_theme.dart';
 import 'screens/login_screen.dart';
@@ -13,13 +14,15 @@ import 'services/auth_service.dart';
 import 'services/project_service.dart';
 import 'services/session_store.dart';
 import 'services/task_service.dart';
+import 'widgets/theme_toggle_button.dart';
 
 // Assemble les services et choisit l'ecran suivant l'etat de la session.
 class BeemViewApp extends StatefulWidget {
-  const BeemViewApp({super.key, this.authController});
+  const BeemViewApp({super.key, this.authController, this.themeController});
 
   // Les tests peuvent fournir un controller avec une API simulee.
   final AuthController? authController;
+  final ThemeController? themeController;
 
   @override
   State<BeemViewApp> createState() => _BeemViewAppState();
@@ -27,6 +30,7 @@ class BeemViewApp extends StatefulWidget {
 
 class _BeemViewAppState extends State<BeemViewApp> {
   late final AuthController _auth;
+  late final ThemeController _theme;
   late final ProjectService _projects;
   late final TaskService _tasks;
   ApiClient? _client;
@@ -34,6 +38,8 @@ class _BeemViewAppState extends State<BeemViewApp> {
   @override
   void initState() {
     super.initState();
+    _theme = widget.themeController ?? ThemeController();
+    if (widget.themeController == null) unawaited(_theme.restore());
     // En execution normale, l'app possede une seule session et un seul client.
     if (widget.authController != null) {
       _auth = widget.authController!;
@@ -55,6 +61,7 @@ class _BeemViewAppState extends State<BeemViewApp> {
 
   @override
   void dispose() {
+    if (widget.themeController == null) _theme.dispose();
     // L'app libere seulement les dependances qu'elle a creees.
     if (widget.authController == null) {
       _auth.dispose();
@@ -66,30 +73,35 @@ class _BeemViewAppState extends State<BeemViewApp> {
   @override
   Widget build(BuildContext context) {
     // Chaque changement du controller actualise loading, erreurs et ecran actif.
-    return ListenableBuilder(
-      listenable: _auth,
-      builder: (context, child) {
-        final Widget home;
-        if (_auth.isRestoring || _auth.restoreFailed) {
-          home = SessionScreen(controller: _auth);
-        } else if (_auth.user != null) {
-          home = ProjectsScreen(
-            controller: _auth,
-            service: _projects,
-            taskService: _tasks,
+    return ThemeScope(
+      controller: _theme,
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_auth, _theme]),
+        builder: (context, child) {
+          final Widget home;
+          if (_auth.isRestoring || _auth.restoreFailed) {
+            home = SessionScreen(controller: _auth);
+          } else if (_auth.user != null) {
+            home = ProjectsScreen(
+              controller: _auth,
+              service: _projects,
+              taskService: _tasks,
+            );
+          } else {
+            home = LoginScreen(controller: _auth);
+          }
+          return MaterialApp(
+            // Un changement de compte efface aussi l'historique de navigation.
+            key: ValueKey(_auth.user?.id),
+            title: 'Beem View 360',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: _theme.mode,
+            home: home,
           );
-        } else {
-          home = LoginScreen(controller: _auth);
-        }
-        return MaterialApp(
-          // Un changement de compte efface aussi l'historique de navigation.
-          key: ValueKey(_auth.user?.id),
-          title: 'Beem View 360',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          home: home,
-        );
-      },
+        },
+      ),
     );
   }
 }

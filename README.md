@@ -12,6 +12,9 @@ BeemView API.
 - Project tasks with name search and all eight status filters applied locally.
 - Task details with description, project, assignees, start/due dates and latest returned comment.
 - Status update with an optional note posted as a separate comment.
+- Light and dark themes with a sun/moon button on every screen. The app follows
+  the device theme until a preference is chosen, then remembers it across restarts
+  and sign-out.
 
 Loading, empty results and failed reads have dedicated states. A protected 401
 returns to Login; 403 preserves the session. A delayed 401 for an old token does
@@ -43,8 +46,9 @@ flutter run --dart-define-from-file=config/app.local.json
 ```
 
 Choose a connected Android device or emulator. Local configuration files, tokens
-and credentials are excluded from Git. The app stores only the token, using
-`flutter_secure_storage` 11.2.0; `http` 1.6.0 handles JSON requests and a 20-second
+and credentials are excluded from Git. The app stores the token and theme
+preference under separate keys using `flutter_secure_storage` 11.2.0;
+`http` 1.6.0 handles JSON requests and a 20-second
 timeout. The logo and Plus Jakarta Sans font are bundled; the font license is
 in `assets/fonts/OFL.txt`.
 
@@ -70,6 +74,12 @@ State management uses Flutter's `ChangeNotifier` and `ListenableBuilder`. The
 state is small and each screen can be understood independently, so no additional
 state-management package is needed. Local password visibility uses `setState`.
 New code blocks have short French comments explaining their purpose.
+
+`ThemeController` shares the appearance choice above the Navigator. Theme changes
+preserve the active route, search filters, login input and draft notes. The saved
+theme is read before the first frame; an unavailable preference falls back to the
+device theme. A failed preference write keeps the selected theme for the current
+session and shows a message.
 
 `Task` normalizes list/detail date names and priority casing. `TaskDetails`
 composes this model with optional associations. `UpdateStatusController` keeps
@@ -104,7 +114,7 @@ Protected requests use `Authorization: Bearer <token>`; JSON bodies use
 - Status and comment are separate writes. A timeout, connection loss, 5xx or
   unusable acknowledgement may follow an applied write. The user checks Details
   before deciding whether to send another note; the app performs no automatic retries.
-- Only the token persists. Projects, tasks and draft notes have no offline storage.
+- Only the token and theme preference persist. Projects, tasks and draft notes have no offline storage.
   Sign-out clears the local session; the contract has no server logout or refresh-token route.
 - Android was tested on an API 36 emulator. iOS configuration is included, but an
   iOS build was not tested because it requires macOS/Xcode. Web is a preview target
@@ -121,10 +131,12 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All **97 tests** pass; formatting and analysis report no issues. Tests cover
+All **103 tests** pass; formatting and analysis report no issues. Tests cover
 response mapping, pagination, filters, session storage/expiry, delayed old-token
 401s, duplicate reads/saves, late responses, partial saves, uncertain comments,
 refresh and preserved filters, and narrow layouts with enlarged text and a keyboard.
+Theme tests cover device brightness, saved preferences, sign-out, preserved form
+and navigation state, and unavailable preference storage.
 HTTP/storage are simulated in automated tests.
 
 The real API was checked on Android for login, session restoration, projects,

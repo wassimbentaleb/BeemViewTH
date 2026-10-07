@@ -16,12 +16,14 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // La carte annonce son action et affiche un retour visuel au toucher.
     return Material(
-      color: Colors.white,
+      color: AppColors.of(context).surface,
       elevation: 1,
-      shadowColor: AppColors.text.withValues(alpha: 0.06),
+      shadowColor: AppColors.of(context).shadow.withValues(alpha: 0.06),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+        side: BorderSide(
+          color: AppColors.of(context).border.withValues(alpha: 0.6),
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -45,9 +47,9 @@ class TaskCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
-                    color: AppColors.muted,
+                    color: AppColors.of(context).muted,
                     size: 26,
                   ),
                 ],
@@ -58,10 +60,10 @@ class TaskCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_today_outlined,
                     size: 18,
-                    color: AppColors.muted,
+                    color: AppColors.of(context).muted,
                   ),
                   const SizedBox(width: 10),
                   // La date garde son jour de calendrier API sans conversion de fuseau horaire.
@@ -70,8 +72,8 @@ class TaskCard extends StatelessWidget {
                       task.dueDate == null
                           ? 'No due date'
                           : 'Due ${DateFormatter.date(task.dueDate!)}',
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: AppColors.of(context).muted,
                         fontSize: 14,
                         height: 1.5,
                       ),

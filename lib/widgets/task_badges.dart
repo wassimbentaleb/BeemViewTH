@@ -13,20 +13,22 @@ class TaskBadges extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Les couleurs appartiennent a l'interface, jamais au model Task.
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = switch (task.status) {
-      'in_progress' => const Color(0xFF007AF5),
-      'done' => const Color(0xFF07824F),
-      'blocked' => const Color(0xFFE83232),
-      'on_hold' => const Color(0xFFC18400),
-      'review' || 'changes_requested' => const Color(0xFF7755B5),
-      _ => AppColors.muted,
+      'in_progress' => dark ? const Color(0xFF7CB8FF) : const Color(0xFF007AF5),
+      'done' => dark ? const Color(0xFF6CDEAD) : const Color(0xFF07824F),
+      'blocked' => dark ? const Color(0xFFFF9292) : const Color(0xFFE83232),
+      'on_hold' => dark ? const Color(0xFFFFCC70) : const Color(0xFFC18400),
+      'review' || 'changes_requested' =>
+        dark ? const Color(0xFFC3A0FF) : const Color(0xFF7755B5),
+      _ => AppColors.of(context).muted,
     };
     final priorityColor = switch (task.priority) {
-      'urgent' => const Color(0xFFE83232),
-      'high' => const Color(0xFFF48B00),
-      'medium' => const Color(0xFFD49B00),
-      'low' => const Color(0xFF27A980),
-      _ => AppColors.muted,
+      'urgent' => dark ? const Color(0xFFFF9292) : const Color(0xFFE83232),
+      'high' => dark ? const Color(0xFFFFB46A) : const Color(0xFFF48B00),
+      'medium' => dark ? const Color(0xFFFFDA75) : const Color(0xFFD49B00),
+      'low' => dark ? const Color(0xFF6CDEAD) : const Color(0xFF27A980),
+      _ => AppColors.of(context).muted,
     };
     // Wrap laisse les badges passer a la ligne sur petit ecran ou grande police.
     return Wrap(
@@ -68,7 +70,9 @@ class _TaskBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.14 : 0.08,
+        ),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text.rich(

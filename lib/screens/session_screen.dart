@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import '../core/app_theme.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/theme_toggle_button.dart';
 
 // Attend la verification du profil ou propose une action si elle echoue.
 class SessionScreen extends StatelessWidget {
@@ -14,6 +15,7 @@ class SessionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final busy = controller.isRestoring || controller.isLoading;
     return Scaffold(
+      appBar: AppBar(actions: const [ThemeToggleButton()]),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -42,7 +44,7 @@ class SessionScreen extends StatelessWidget {
                     Text(
                       controller.error ?? 'Please try again.',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.muted),
+                      style: TextStyle(color: AppColors.of(context).muted),
                     ),
                     const SizedBox(height: 24),
                     // Retry garde le token; Sign in efface la session sur demande.

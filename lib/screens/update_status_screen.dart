@@ -7,6 +7,7 @@ import '../core/app_theme.dart';
 import '../models/task.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/theme_toggle_button.dart';
 
 // Presente les choix et la note; le controller garde les valeurs API et les etats.
 class UpdateStatusScreen extends StatefulWidget {
@@ -78,8 +79,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             title: const BrandLogo(),
             centerTitle: true,
             toolbarHeight: 76,
-            backgroundColor: AppColors.background,
+            backgroundColor: AppColors.of(context).background,
             scrolledUnderElevation: 0,
+            actions: const [ThemeToggleButton()],
           ),
           // Scaffold ne deplace pas bottomNavigationBar avec le clavier; on reserve sa hauteur.
           bottomNavigationBar: Padding(
@@ -89,11 +91,14 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             child: _buildSaveAction(),
           ),
           body: DecoratedBox(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFF3FBFE), AppColors.background],
+                colors: [
+                  AppColors.of(context).gradient,
+                  AppColors.of(context).background,
+                ],
                 stops: [0, 0.5],
               ),
             ),
@@ -152,12 +157,12 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Your note will be added as a comment.',
                           style: TextStyle(
                             fontSize: 13,
                             height: 1.5,
-                            color: AppColors.muted,
+                            color: AppColors.of(context).muted,
                           ),
                         ),
                         if (_update.error != null) ...[
@@ -259,8 +264,8 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF8EC),
-          border: Border.all(color: const Color(0xFFF0D7A8)),
+          color: AppColors.of(context).warning,
+          border: Border.all(color: AppColors.of(context).warningBorder),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -278,10 +283,10 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
               const SizedBox(height: 8),
               Text(
                 _update.error!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   height: 1.5,
-                  color: AppColors.muted,
+                  color: AppColors.of(context).muted,
                 ),
               ),
             ],
@@ -309,8 +314,8 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.of(context).surface,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -327,7 +332,7 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
           const SizedBox(height: 8),
           Text(
             'Current status: ${_update.currentStatusLabel}',
-            style: const TextStyle(fontSize: 16, color: AppColors.muted),
+            style: TextStyle(fontSize: 16, color: AppColors.of(context).muted),
           ),
         ],
       ),
@@ -364,11 +369,15 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
       inMutuallyExclusiveGroup: true,
       enabled: _update.canEditStatus,
       child: Material(
-        color: selected ? const Color(0xFFEAF9FE) : Colors.white,
+        color: selected
+            ? AppColors.of(context).selected
+            : AppColors.of(context).surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: selected ? AppColors.primary : AppColors.border,
+            color: selected
+                ? AppColors.of(context).primary
+                : AppColors.of(context).border,
           ),
         ),
         child: InkWell(
@@ -389,7 +398,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                           ? Icons.radio_button_checked
                           : Icons.radio_button_off,
                       size: 24,
-                      color: selected ? AppColors.primary : AppColors.muted,
+                      color: selected
+                          ? AppColors.of(context).primary
+                          : AppColors.of(context).muted,
                     ),
                   ),
                   const SizedBox(width: 12),

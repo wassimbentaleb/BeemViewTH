@@ -12,6 +12,7 @@ import '../models/user.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_badges.dart';
+import '../widgets/theme_toggle_button.dart';
 import 'update_status_screen.dart';
 
 // Charge les informations actuelles de la task choisie dans la liste.
@@ -70,17 +71,21 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
             title: const BrandLogo(),
             centerTitle: true,
             toolbarHeight: 76,
-            backgroundColor: AppColors.background,
+            backgroundColor: AppColors.of(context).background,
             scrolledUnderElevation: 0,
+            actions: const [ThemeToggleButton()],
           ),
           // Le fond discret, les titres et les panneaux suivent la maquette Details.
           bottomNavigationBar: _buildStatusAction(),
           body: DecoratedBox(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFF3FBFE), AppColors.background],
+                colors: [
+                  AppColors.of(context).gradient,
+                  AppColors.of(context).background,
+                ],
                 stops: [0, 0.5],
               ),
             ),
@@ -167,10 +172,10 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
 
   List<Widget> _buildContent() {
     // Le titre et les badges viennent de la reponse Details, pas de la carte precedente.
-    const label = Text(
+    final label = Text(
       'Task details',
       style: TextStyle(
-        color: AppColors.muted,
+        color: AppColors.of(context).muted,
         fontSize: 14,
         fontWeight: FontWeight.w600,
       ),
@@ -231,13 +236,13 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
               'Project',
               Text((details.project ?? widget.project).name),
             ),
-            const Divider(height: 28, color: AppColors.border),
+            Divider(height: 28, color: AppColors.of(context).border),
             _buildInfoRow(
               'Assigned to',
               details.assignees.isEmpty
-                  ? const Text(
+                  ? Text(
                       'Unassigned',
-                      style: TextStyle(color: AppColors.muted),
+                      style: TextStyle(color: AppColors.of(context).muted),
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -254,7 +259,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                       ],
                     ),
             ),
-            const Divider(height: 28, color: AppColors.border),
+            Divider(height: 28, color: AppColors.of(context).border),
             // Start et due sont des dates de calendrier; leur absence reste explicite.
             _buildInfoRow(
               'Start date',
@@ -264,7 +269,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                     : DateFormatter.date(details.task.startedDate!),
               ),
             ),
-            const Divider(height: 28, color: AppColors.border),
+            Divider(height: 28, color: AppColors.of(context).border),
             _buildInfoRow(
               'Due date',
               Text(
@@ -294,7 +299,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
               missing
                   ? Icons.assignment_late_outlined
                   : Icons.cloud_off_outlined,
-              color: AppColors.muted,
+              color: AppColors.of(context).muted,
               size: 36,
             ),
             const SizedBox(height: 16),
@@ -305,10 +310,10 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
             const SizedBox(height: 8),
             Text(
               _details.error ?? 'Task details unavailable.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 height: 1.5,
-                color: AppColors.muted,
+                color: AppColors.of(context).muted,
               ),
             ),
             const SizedBox(height: 20),
@@ -342,8 +347,8 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       builder: (context, constraints) {
         final labelWidget = Text(
           label,
-          style: const TextStyle(
-            color: AppColors.muted,
+          style: TextStyle(
+            color: AppColors.of(context).muted,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -351,7 +356,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
         final valueWidget = DefaultTextStyle(
           style: TextStyle(
             fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
-            color: AppColors.text,
+            color: AppColors.of(context).text,
             fontSize: 14,
             height: 1.5,
           ),
@@ -400,10 +405,10 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           ),
           const SizedBox(height: 16),
           if (comment == null)
-            const Text(
+            Text(
               'No comments available.',
               style: TextStyle(
-                color: AppColors.muted,
+                color: AppColors.of(context).muted,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -430,9 +435,9 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                         const SizedBox(height: 4),
                         Text(
                           DateFormatter.timestamp(comment.createdAt!),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.muted,
+                            color: AppColors.of(context).muted,
                             height: 1.5,
                           ),
                         ),
@@ -458,8 +463,8 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     final text = name.trim();
     return CircleAvatar(
       radius: radius,
-      backgroundColor: const Color(0xFFDDF4FC),
-      foregroundColor: const Color(0xFF007AF5),
+      backgroundColor: AppColors.of(context).avatar,
+      foregroundColor: AppColors.of(context).avatarText,
       child: Text(
         text.isEmpty ? '?' : text.characters.first.toUpperCase(),
         style: const TextStyle(fontWeight: FontWeight.w700),
@@ -468,19 +473,21 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   }
 
   Widget _buildPanel({required Widget child}) {
-    // Les informations de la fiche utilisent le meme panneau blanc et les memes marges.
+    // Les informations de la fiche utilisent le meme panneau et les memes marges.
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.of(context).surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.35)),
-        boxShadow: const [
+        border: Border.all(
+          color: AppColors.of(context).border.withValues(alpha: 0.35),
+        ),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0407182F),
+            color: AppColors.of(context).shadow.withValues(alpha: 0.016),
             blurRadius: 16,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 5),
           ),
         ],
       ),

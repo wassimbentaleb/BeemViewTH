@@ -10,6 +10,7 @@ import '../services/project_service.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/project_card.dart';
+import '../widgets/theme_toggle_button.dart';
 import 'project_tasks_screen.dart';
 
 // Affiche les projets du compte connecte et possede leur controller.
@@ -59,9 +60,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           title: const BrandLogo(),
           centerTitle: true,
           toolbarHeight: 76,
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.of(context).background,
           scrolledUnderElevation: 0,
           actions: [
+            const ThemeToggleButton(),
             // L'avatar ouvre le menu du compte et conserve la deconnexion locale.
             Padding(
               padding: const EdgeInsets.only(right: 20),
@@ -77,8 +79,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   PopupMenuItem(value: 'sign_out', child: Text('Sign out')),
                 ],
                 child: CircleAvatar(
-                  backgroundColor: const Color(0xFFE8EDF5),
-                  foregroundColor: AppColors.text,
+                  backgroundColor: AppColors.of(context).subtle,
+                  foregroundColor: AppColors.of(context).text,
                   child: Text(initial.toUpperCase()),
                 ),
               ),
@@ -87,11 +89,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ),
         // Le fond discret et les espacements reprennent la maquette Projects.
         body: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFF3FBFE), AppColors.background],
+              colors: [
+                AppColors.of(context).gradient,
+                AppColors.of(context).background,
+              ],
               stops: [0, 0.5],
             ),
           ),
@@ -123,10 +128,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Choose a project to view its tasks.',
                         style: TextStyle(
-                          color: AppColors.muted,
+                          color: AppColors.of(context).muted,
                           fontSize: 16,
                           height: 1.5,
                         ),
@@ -203,7 +208,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       );
     }
     // Les couleurs sont decoratives; les noms et IDs viennent toujours de l'API.
-    const colors = [AppColors.primary, Color(0xFF00B88D), AppColors.amber];
+    final colors = [
+      AppColors.of(context).primary,
+      Color(0xFF00B88D),
+      AppColors.of(context).amber,
+    ];
     return Column(
       children: [
         for (var index = 0; index < projects.length; index++)
@@ -244,12 +253,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary),
+              foregroundColor: AppColors.of(context).primary,
+              side: BorderSide(color: AppColors.of(context).primary),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               textStyle: const TextStyle(
+                fontFamily: 'PlusJakartaSans',
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -272,14 +282,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.of(context).surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.of(context).border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, size: 36, color: AppColors.muted),
+          Icon(icon, size: 36, color: AppColors.of(context).muted),
           const SizedBox(height: 16),
           Text(
             title,
@@ -288,8 +298,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           const SizedBox(height: 8),
           Text(
             message,
-            style: const TextStyle(
-              color: AppColors.muted,
+            style: TextStyle(
+              color: AppColors.of(context).muted,
               fontSize: 16,
               height: 1.5,
             ),

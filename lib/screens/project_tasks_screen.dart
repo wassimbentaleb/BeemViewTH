@@ -9,6 +9,7 @@ import '../models/task.dart';
 import '../services/task_service.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/task_card.dart';
+import '../widgets/theme_toggle_button.dart';
 import 'task_details_screen.dart';
 
 // Charge les tasks du projet choisi et possede leur controller.
@@ -59,16 +60,20 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
           title: const BrandLogo(),
           centerTitle: true,
           toolbarHeight: 76,
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.of(context).background,
           scrolledUnderElevation: 0,
+          actions: const [ThemeToggleButton()],
         ),
         // Le fond, le titre et les cartes reprennent la maquette Project Tasks.
         body: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFF3FBFE), AppColors.background],
+              colors: [
+                AppColors.of(context).gradient,
+                AppColors.of(context).background,
+              ],
               stops: [0, 0.5],
             ),
           ),
@@ -93,9 +98,12 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Project tasks',
-                        style: TextStyle(color: AppColors.muted, fontSize: 18),
+                        style: TextStyle(
+                          color: AppColors.of(context).muted,
+                          fontSize: 18,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       // Le nom est cherche dans les tasks deja chargees du projet.
@@ -132,9 +140,12 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Filters apply to loaded tasks',
-                        style: TextStyle(color: AppColors.muted, fontSize: 14),
+                        style: TextStyle(
+                          color: AppColors.of(context).muted,
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       // Wrap garde le compteur lisible meme avec une grande police.
@@ -154,8 +165,8 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
                           if (!_tasks.isLoading && _tasks.error == null)
                             Text(
                               '${_tasks.visibleTasks.length} ${_tasks.visibleTasks.length == 1 ? 'task' : 'tasks'}',
-                              style: const TextStyle(
-                                color: AppColors.muted,
+                              style: TextStyle(
+                                color: AppColors.of(context).muted,
                                 fontSize: 16,
                               ),
                             ),
@@ -245,17 +256,19 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
         selected: selected,
         showCheckmark: false,
         onSelected: (_) => _tasks.setStatus(value),
-        selectedColor: AppColors.primary,
-        backgroundColor: const Color(0xFFF4F7FC),
+        selectedColor: AppColors.of(context).primary,
+        backgroundColor: AppColors.of(context).chip,
         labelStyle: TextStyle(
-          color: selected ? Colors.white : AppColors.text,
+          color: selected
+              ? AppColors.of(context).onPrimary
+              : AppColors.of(context).text,
           fontSize: 14,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         side: BorderSide(
           color: selected
-              ? AppColors.primary
-              : AppColors.border.withValues(alpha: 0.6),
+              ? AppColors.of(context).primary
+              : AppColors.of(context).border.withValues(alpha: 0.6),
         ),
         shape: const StadiumBorder(),
       ),
@@ -295,14 +308,14 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.of(context).surface,
+        border: Border.all(color: AppColors.of(context).border),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, size: 36, color: AppColors.muted),
+          Icon(icon, size: 36, color: AppColors.of(context).muted),
           const SizedBox(height: 16),
           Text(
             title,
@@ -311,8 +324,8 @@ class _ProjectTasksScreenState extends State<ProjectTasksScreen> {
           const SizedBox(height: 8),
           Text(
             message,
-            style: const TextStyle(
-              color: AppColors.muted,
+            style: TextStyle(
+              color: AppColors.of(context).muted,
               fontSize: 16,
               height: 1.5,
             ),

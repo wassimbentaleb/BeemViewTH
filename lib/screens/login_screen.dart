@@ -5,6 +5,7 @@ import '../controllers/auth_controller.dart';
 import '../core/app_theme.dart';
 import '../core/validators.dart';
 import '../widgets/brand_logo.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.controller});
@@ -49,15 +50,21 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     // Le scroll et SafeArea gardent les champs accessibles avec le clavier.
     return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 48,
+        backgroundColor: AppColors.of(context).loginGradient,
+        scrolledUnderElevation: 0,
+        actions: const [ThemeToggleButton()],
+      ),
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFF0FAFE),
-              AppColors.background,
-              AppColors.background,
+              AppColors.of(context).loginGradient,
+              AppColors.of(context).background,
+              AppColors.of(context).background,
             ],
             stops: [0, 0.4, 1],
           ),
@@ -83,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               SizedBox(
-                                height: constraints.maxHeight > 650 ? 80 : 32,
+                                height: constraints.maxHeight > 650 ? 32 : 8,
                               ),
                               _buildHeader(),
                               const SizedBox(height: 28),
@@ -106,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildHeader() {
     // Logo et texte d'accueil reprennent la maquette fournie.
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(child: BrandLogo(large: true)),
@@ -131,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   height: 1.5,
-                  color: AppColors.muted,
+                  color: AppColors.of(context).muted,
                   letterSpacing: -0.6,
                 ),
               ),
@@ -149,13 +156,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.of(context).surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0807182F),
+            color: AppColors.of(context).shadow.withValues(alpha: 0.03),
             blurRadius: 24,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -259,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildFooter() {
     // Signature de marque en bas de l'ecran.
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.only(top: 40, bottom: 32),
       child: Text.rich(
         TextSpan(
@@ -267,14 +274,14 @@ class _LoginScreenState extends State<LoginScreen> {
             TextSpan(text: 'Beem View '),
             TextSpan(
               text: '360',
-              style: TextStyle(color: AppColors.amber),
+              style: TextStyle(color: AppColors.of(context).amber),
             ),
           ],
         ),
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: AppColors.muted,
+          color: AppColors.of(context).muted,
         ),
       ),
     );
