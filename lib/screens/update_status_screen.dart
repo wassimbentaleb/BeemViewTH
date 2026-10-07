@@ -81,7 +81,13 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             backgroundColor: AppColors.background,
             scrolledUnderElevation: 0,
           ),
-          bottomNavigationBar: _buildSaveAction(),
+          // Scaffold ne deplace pas bottomNavigationBar avec le clavier; on reserve sa hauteur.
+          bottomNavigationBar: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: _buildSaveAction(),
+          ),
           body: DecoratedBox(
             decoration: const BoxDecoration(
               gradient: LinearGradient(

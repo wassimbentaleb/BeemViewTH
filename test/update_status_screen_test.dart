@@ -273,6 +273,11 @@ void main() {
     addTearDown(tester.view.resetViewInsets);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('status-note')));
+    // Save doit etre au-dessus des 260px occupes par le clavier, pas seulement dans le viewport.
+    final saveBounds = tester.getRect(
+      find.widgetWithText(FilledButton, 'Save status'),
+    );
+    expect(saveBounds.bottom, lessThanOrEqualTo(640 - 260));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
