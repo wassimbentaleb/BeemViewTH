@@ -1,7 +1,9 @@
 # Launch Screen Assets
 
-These images are exact copies of `assets/images/beemview-logo.png`. The launch
-storyboard fixes the logo at 128 points and uses aspect fit on every display.
+These images combine the original `assets/images/beemview-logo.png` with a
+cyan/orange `BeemView360` wordmark using the bundled Plus Jakarta Sans font.
+The transparent 288-point canvas contains a 104-point logo and the name below.
+The launch storyboard uses aspect fit on every display.
 
 Regenerate the Android and iOS launch assets on Windows from the repository root:
 
