@@ -23,10 +23,28 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _hidePassword = true;
+  bool _hasPassword = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_passwordChanged);
+  }
+
+  void _passwordChanged() {
+    final hasPassword = _passwordController.text.isNotEmpty;
+    if (hasPassword == _hasPassword) return;
+    setState(() {
+      _hasPassword = hasPassword;
+      // Une nouvelle saisie revient au masquage apres avoir vide le champ.
+      if (!hasPassword) _hidePassword = true;
+    });
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
+    _passwordController.removeListener(_passwordChanged);
     _passwordController.dispose();
     super.dispose();
   }
@@ -226,36 +244,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   validator: Validators.password,
                   onFieldSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
-                    // Les points sont un hint; aucune valeur de password n'est pre-remplie.
-                    hintText: '••••••••',
-                    hintStyle: fieldStyle.copyWith(
-                      color: colors.text,
-                      letterSpacing: 3,
-                    ),
                     prefixIcon: const Icon(
                       Icons.lock_outline_rounded,
                       size: 20,
                     ),
-                    suffixIcon: IconButton(
-                      tooltip: _hidePassword
-                          ? 'Show password'
-                          : 'Hide password',
-                      constraints: const BoxConstraints.tightFor(
-                        width: 44,
-                        height: 44,
-                      ),
-                      padding: EdgeInsets.zero,
-                      onPressed: widget.controller.isLoading
-                          ? null
-                          : () =>
-                                setState(() => _hidePassword = !_hidePassword),
-                      icon: Icon(
-                        _hidePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        size: 20,
-                      ),
-                    ),
+                    suffixIcon: !_hasPassword
+                        ? null
+                        : IconButton(
+                            tooltip: _hidePassword
+                                ? 'Show password'
+                                : 'Hide password',
+                            constraints: const BoxConstraints.tightFor(
+                              width: 44,
+                              height: 44,
+                            ),
+                            padding: EdgeInsets.zero,
+                            onPressed: widget.controller.isLoading
+                                ? null
+                                : () => setState(
+                                    () => _hidePassword = !_hidePassword,
+                                  ),
+                            icon: Icon(
+                              _hidePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              size: 20,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 24),
