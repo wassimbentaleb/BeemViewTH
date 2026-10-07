@@ -1,218 +1,142 @@
 # Beem View 360
 
-A Flutter mobile app for the BeemView take-home assignment, built from the
-supplied screen designs.
+A standalone Flutter mobile app for browsing projects and tasks with the
+BeemView API.
 
-## Current step
+## Features
 
-Login now uses the API. The form validates email/password, supports password
-visibility and autofill, and scrolls when the keyboard opens. During login,
-inputs and the submit button are disabled. API errors preserve the entered text.
+- Login with email/password validation, loading and readable API errors.
+- Secure token storage, session restoration and local sign-out.
+- Projects with pagination and a Load more action.
+- Project tasks with name search and all eight status filters applied locally.
+- Task details with description, project, assignees, dates and latest returned comment.
+- Status update with an optional note posted as a separate comment.
 
-The token is saved securely; the password is not stored by the app. On restart,
-the app checks the saved token with the current-user profile endpoint before
-opening the authenticated area. A protected HTTP 401 clears the session. HTTP
-403 or a network failure during restoration keeps the saved token and offers
-Retry or an explicit return to login. Signing out clears the local session.
+Loading, empty results and failed reads have dedicated states. A protected 401
+returns to Login; 403 preserves the session. A delayed 401 for an old token does
+not clear a newer session.
 
-The authenticated Projects screen loads projects in pages of ten and shows the
-user's name. Load more appends the next page, replaces duplicate IDs, blocks
-duplicate requests and disappears after the final page. Its avatar opens the
-account menu with Sign out. Empty results show Reload; request failures show
-Retry. A failed next page keeps the loaded cards and retries the same offset.
-Selecting a project passes its ID and name to the Project Tasks destination.
-That screen loads the selected project's tasks and displays API names, status,
-priority and available due dates. Returning to Projects preserves its loaded list.
-Task name search runs locally, ignores case and surrounding spaces, and can be
-cleared without fetching the project collection again.
-Status chips cover all eight documented API statuses and combine with name
-search. Scroll them horizontally to reach the remaining statuses. The controls
-are labelled as filtering loaded tasks, and the count shows matching tasks.
-Failed reads show a useful message and Retry. Empty projects offer Reload;
-empty filter results offer Clear filters, which resets name and status locally.
-Retry preserves the entered search and selected status. A task API 401 returns
-to Login and clears the session; 403 leaves the session available for retry.
-Selecting a task passes its ID and project to the Task Details destination;
-double taps open only one route. Returning retains search and status filters;
-the collection is refreshed after a task change. Details fetch the current task name, status, priority and
-description from the API; missing descriptions have a clear empty value.
-The detail information panel shows the returned project, every assignee, start
-and due dates, and creation/update timestamps when present. Null values display
-Unassigned or No date messages; an absent project association uses the selected
-project from navigation. Rows stack on narrow screens or with enlarged text.
-Latest comment shows content, author and timestamp when available. The newest
-returned timestamp determines the selection; if none are usable, the first
-returned comment is shown. Empty responses show No comments available. Only
-the returned comments are considered; this endpoint provides up to ten recent
-comments, rather than a complete history.
-Detail read failures offer Retry and return to Tasks. A 404 shows Task not found
-with a direct return action. A protected 401 clears the session and all open
-routes; 403 preserves it. Duplicate reads and responses after disposal are guarded.
-The Update status button stays accessible at the bottom after a successful read.
-It passes the fresh task ID/status to the next destination and prevents duplicate
-navigation. The status form offers the eight documented values and an optional
-note, with a single column on narrow screens or enlarged text. Save first sends
-only status with PUT; a nonempty trimmed note is then posted as a separate
-comment. Saving disables editing, submission and Back until both calls finish.
-Success returns to Details and reads the current task again. Returning to Tasks
-refreshes the collection while keeping the entered search and status filter.
+Save sends status first, then a nonempty trimmed note. Controls and Back are
+locked during saving. Save stays above the keyboard while entering a note.
+If only the comment fails, the note is kept and Retry
+sends only that comment. An uncertain write response offers a fresh detail read
+instead of resubmitting. After an update, Details and Tasks are refreshed while
+keeping the task-list search and filter.
 
-If status succeeds but the comment is explicitly rejected, the form reports
-Status saved, preserves the note and retries only the comment. A confirmed
-comment is never resubmitted. Connection loss, timeout, server 5xx or an unusable
-write response leave the outcome uncertain; the form preserves a copyable note
-and offers Check task details instead of another write. A missing task disables
-Save and returns to a fresh detail read. A failed read after saving offers GET
-Retry without repeating either write. Protected 401 still clears the session;
-403 retains the selected values, note and session.
+## Setup and run
 
-## Run
-
-Built with Flutter 3.47.2 and Dart 3.13.2.
+Built and checked with **Flutter 3.47.2 / Dart 3.13.2**.
 
 ```sh
 flutter pub get
 ```
 
-Copy `config/app.example.json` to `config/app.local.json` and fill in the assigned
-tenant subdomain. `API_ORIGIN` defaults to `https://beemview.com`. The tenant is
-configuration; email and password are entered in the form. The local file is
-ignored by Git and contains no password.
+Copy `config/app.example.json` to `config/app.local.json`. Keep `API_ORIGIN` as
+`https://beemview.com` unless another origin is supplied, and fill
+`TENANT_SUBDOMAIN` with the assigned tenant. The origin must be an absolute HTTP
+or HTTPS URL, without `/api`; the tenant must be nonempty. Credentials are entered
+in the login form and are never included in this configuration file.
 
 ```sh
 flutter run --dart-define-from-file=config/app.local.json
 ```
 
-Choose a connected Android device or emulator. For a browser preview:
+Choose a connected Android device or emulator. Local configuration files, tokens
+and credentials are excluded from Git. The app stores only the token, using
+`flutter_secure_storage` 11.2.0; `http` 1.6.0 handles JSON requests and a 20-second
+timeout. The logo and Plus Jakarta Sans font are bundled; the font license is
+in `assets/fonts/OFL.txt`.
 
-```sh
-flutter run -d chrome --dart-define-from-file=config/app.local.json
-```
-
-Browser API access also requires the server to allow the preview's origin through
-CORS. Web secure storage requires HTTPS or localhost.
-
-## Structure
+## Architecture
 
 ```text
 lib/
-  main.dart                  Initializes Flutter and starts the app.
-  app.dart                   Creates services and chooses the session screen.
-  core/app_theme.dart        Shared colors, font, inputs and buttons.
-  core/validators.dart       Email and password rules.
-  core/app_config.dart       API origin and tenant configuration.
-  core/api_exception.dart    Useful API errors with HTTP status codes.
-  models/                    Typed user, login session, project and task data.
-  services/                  HTTP, authentication, project/task reads and writes, token storage.
-  controllers/               Session, projects and tasks state, loading and errors.
-  screens/                   Login, session check, Projects, Tasks, Details and status form.
-  widgets/                   Brand logo, project/task cards and shared task badges.
+  main.dart       App entry point.
+  app.dart        Shared services, session and initial screen.
+  core/           Configuration, theme, validation, dates and API errors.
+  models/         Typed response data.
+  services/       HTTP requests and secure session storage.
+  controllers/    Loading, errors, filters and save state.
+  screens/        The five screens and session restoration.
+  widgets/        Shared logo, cards and badges.
 ```
 
-The request flow is **screen -> controller -> service -> API**. Screens
-display state; controllers manage loading and errors; services call endpoints;
-models turn response JSON into Dart objects.
+The data flow is **screen -> controller -> service -> API**. Services map JSON
+into typed models. Screens own their controllers, while the app owns the shared
+HTTP client and authentication controller.
 
-`Task` normalizes list/detail date keys and priority casing, keeps optional dates
-nullable, and preserves unfamiliar status labels. Numeric progress is ignored.
-`TaskDetails` composes the same task model with optional description, project,
-assignees and creation/update dates. Missing optional associations remain empty.
-`TaskService` reads the `tasks` array from `/api/tasks/project/:projectId` using
-the shared authenticated client. This endpoint returns the whole collection;
-no server search, status parameters or task pagination are used.
-Its `fetchTaskDetails` method reads `/api/tasks/:id` from the `task` envelope,
-checks the returned ID and reports malformed data as a read failure.
-`updateStatus` sends only `{status}` to `PUT /api/tasks/:id`. `addComment`
-sends `{task_id, content, mentioned_user_ids: []}` to `POST /api/tasks/comment`.
-`UpdateStatusController` sequences these operations, remembers acknowledged
-status saves and blocks duplicate submissions or uncertain write retries.
+State management uses Flutter's `ChangeNotifier` and `ListenableBuilder`. The
+state is small and each screen can be understood independently, so no additional
+state-management package is needed. Local password visibility uses `setState`.
+New code blocks have short French comments explaining their purpose.
 
-Session, project, task-list, task-detail and status controllers use Flutter's `ChangeNotifier`;
-`ListenableBuilder` rebuilds the interface when their state changes.
-Password visibility uses local `setState`
-because it only affects the form. Changing the authenticated user also resets
-navigation, so sign-out or expiry removes authenticated pages from the back stack.
-New logical blocks have short French comments explaining their purpose.
+`Task` normalizes list/detail date names and priority casing. `TaskDetails`
+composes this model with optional associations. `UpdateStatusController` keeps
+confirmed status saves separate from comment success, which makes comment-only
+retry possible without sending status again.
 
-## Configuration and dependencies
+## API routes
 
-`http` 1.6.0 handles JSON requests, bearer headers and a 20-second timeout.
-[`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage)
-11.2.0 stores the token with Android encryption and iOS Keychain.
-The brand symbol and Plus Jakarta Sans font
-are bundled locally. The font's license is included in `assets/fonts/OFL.txt`.
+Protected requests use `Authorization: Bearer <token>`; JSON bodies use
+`Content-Type: application/json`. IDs come from API responses.
 
-Android internet access is enabled and automatic backup is disabled for the
-encrypted session. iOS Keychain entitlements are configured for all build modes;
-an iOS build requires macOS and Xcode.
+| Method | Route | Purpose |
+| --- | --- | --- |
+| POST | `/api/auth/login` | Email, password and configured subdomain. |
+| GET | `/api/users/me/profile` | Validate the restored session. |
+| GET | `/api/projects?limit=10&offset=0` | Paginated visible projects. |
+| GET | `/api/tasks/project/:projectId` | Complete task collection for a project. |
+| GET | `/api/tasks/:id` | Current task details. |
+| PUT | `/api/tasks/:id` | Send only the selected `status`. |
+| POST | `/api/tasks/comment` | Send `task_id`, trimmed `content`, `mentioned_user_ids: []`. |
 
-Credentials, tokens, local reference images and temporary previews are excluded
-from source control. No automatic login or request retry uses saved credentials.
+## Assumptions and limitations
 
-## Checks
+- Test access and tenant configuration are supplied separately. Use the assigned
+  project and tasks for write requests.
+- Project-task search and status filters run over the loaded collection. That
+  endpoint has no pagination; server-side task filtering is not used.
+- Missing optional fields remain empty. Unknown status labels stay readable;
+  saving requires one of the eight documented API values.
+- Details returns up to ten recent comments. The newest usable timestamp chooses
+  the displayed comment; if none are usable, the first returned comment is used.
+- Status and comment are separate writes. A timeout, connection loss, 5xx or
+  unusable acknowledgement may follow an applied write. The user checks Details
+  before deciding whether to send another note; the app performs no automatic retries.
+- Only the token persists. Projects, tasks and draft notes have no offline storage.
+  Sign-out clears the local session; the contract has no server logout or refresh-token route.
+- Android was tested on an API 36 emulator. iOS configuration is included, but an
+  iOS build was not tested because it requires macOS/Xcode. Web is a preview target
+  and was not validated; API access depends on server CORS and secure storage
+  requires HTTPS or localhost.
+- The APK is a debug build. Production signing is not configured.
+
+## Verification
 
 ```sh
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All 93 tests pass and `flutter analyze` reports no issues.
-The tests cover validation, compact layout, password visibility, request
-payloads, profile parsing, duplicate submissions, token storage, restoration,
-401 versus 403, retained input on API failure, successful login and sign-out.
-Project tests also check data mapping, response envelopes, bearer headers,
-pagination parameters, duplicate IDs, retained cards on retry, empty states,
-401/403 session behavior, loading, long names with enlarged text, selected
-project IDs, return navigation and expiry while a project route is open.
-Task tests check list/detail field normalization, missing dates, all eight
-status filters combined with case-insensitive name search, duplicate loading,
-late responses after disposal, empty projects versus empty search results,
-Retry after network/403 errors, 401 route removal, keyboard layout with enlarged
-text, task selection, double taps and preserved filters on return.
-Detail tests check optional description/project/assignees/dates, the task envelope
-and returned ID, latest comment selection in an unordered response, missing author
-or timestamps, guarded loads, late success/error after disposal, 401/403/404,
-network retry, long text on a narrow screen, and fresh data passed to status navigation.
-HTTP and storage are simulated in these tests. The real login/profile and
-project-list, project-task and task-detail APIs have also been checked with the supplied test account.
+All **96 tests** pass; formatting and analysis report no issues. Tests cover
+response mapping, pagination, filters, session storage/expiry, delayed old-token
+401s, duplicate reads/saves, late responses, partial saves, uncertain comments,
+refresh and preserved filters, and narrow layouts with enlarged text and a keyboard.
+HTTP/storage are simulated in automated tests.
 
-The debug APK was built and installed on an Android API 36 emulator. Real form
-login, session restoration after a full app restart, and sign-out were verified
-during authentication work. For Projects, reopening the installed app restored
-the session and displayed the four projects returned by the API. Project
-selection, return navigation and the account menu were also checked on Android.
-Multi-page behavior and failures were tested with simulated responses because
-the supplied account currently has fewer projects than the page size.
+The real API was checked on Android for login, session restoration, projects,
+tasks, details and status saving. The assigned task was changed from To do to
+In progress, its detail/list data refreshed, then its original status restored.
+Comments, partial failures and pagination beyond the test account's projects
+were checked with simulated responses.
 
-For Project Tasks, the updated debug APK displayed the three tasks returned for
-the selected project. Done filtering, name search, no matching results, clearing
-both filters, task selection and preserved search/status on return were checked
-on Android. The screen was visually inspected against the supplied design.
-No task status or comment was changed during step 5.
+Final Android checks also covered offline session restoration followed by Retry,
+sign-out persisting after a restart, real login and restoration after another
+restart, combined task search/status filtering, return navigation and note entry
+with Save visible above the keyboard. Wi-Fi and mobile-data settings were restored
+after the offline check.
 
-For Task Details, the updated APK restored the session and loaded the selected
-task's description, project, priority and dates. The supplied task had no
-assignees or returned comments, so both empty values were checked on Android.
-Scrolling, the fixed Update status action, its current task/status destination
-and return to the same detail fiche were verified. Multiple assignees and latest
-comment selection were checked with simulated responses. No task writes occurred
-during step 6.
-
-Status tests cover exact PUT/POST bodies, ordering, whitespace-only notes,
-all eight values, duplicate clicks during both operations, rejected status,
-partial success and comment-only retry, uncertain writes, missing tasks,
-session expiry during either write, and disposal during saving. Widget tests
-also check enlarged text with a keyboard, locked controls and Android Back,
-current details/comments after Save or an uncertain response, failed refresh
-Retry, and retained filters after the task leaves the selected status.
-
-There is no refresh-token or server logout endpoint in the assignment contract.
-
-On Android, Update Status was visually inspected and used with the real API to
-change the assigned task from To do to In progress. Details reflected the saved
-status, and Android Back refreshed Tasks while retaining the To do filter,
-correctly showing no matching tasks. Selecting In progress showed the updated
-card. The task was then restored to its original To do status and verified with
-a fresh API read. Optional comments and partial failures were checked with
-simulated responses; the manual check added no real comments.
+The installable debug APK is generated at
+`build/app/outputs/flutter-apk/app-debug.apk` and is excluded from Git.
