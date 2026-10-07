@@ -2,7 +2,7 @@ import 'package:beemview/models/task_details.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('latest returned comment is selected by timestamp rather than array order or ID', () {
+  test('every returned comment is sorted by timestamp rather than array order or ID', () {
     // L'ID le plus grand et le premier element ne sont pas forcement les plus recents.
     final details = TaskDetails.fromJson({
       'id': 501,
@@ -23,9 +23,16 @@ void main() {
         {'id': 99, 'content': 'Undated', 'created_at': null},
       ],
     });
-    expect(details.latestComment!.id, 77);
-    expect(details.latestComment!.authorName, 'Candidate');
-    expect(details.latestComment!.content, 'Latest');
+    expect(details.commentsNewestFirst.map((comment) => comment.id), [
+      77,
+      91,
+      90,
+      99,
+    ]);
+    expect(details.commentsNewestFirst.first.authorName, 'Candidate');
+    expect(details.commentsNewestFirst.first.content, 'Latest');
+    expect(details.comments.map((comment) => comment.id), [90, 77, 91, 99]);
+    expect(() => details.commentsNewestFirst.clear(), throwsUnsupportedError);
     expect(() => details.comments.clear(), throwsUnsupportedError);
   });
 
@@ -38,13 +45,16 @@ void main() {
         {'id': 78, 'content': 'Another undated comment'},
       ],
     });
-    expect(details.latestComment!.id, 77);
-    expect(details.latestComment!.authorName, 'Unknown user');
-    expect(details.latestComment!.content, 'No comment text available.');
-    expect(details.latestComment!.createdAt, isNull);
+    expect(details.commentsNewestFirst.map((comment) => comment.id), [77, 78]);
+    expect(details.commentsNewestFirst.first.authorName, 'Unknown user');
     expect(
-      TaskDetails.fromJson({'id': 501, 'Comments': null}).latestComment,
-      isNull,
+      details.commentsNewestFirst.first.content,
+      'No comment text available.',
+    );
+    expect(details.commentsNewestFirst.first.createdAt, isNull);
+    expect(
+      TaskDetails.fromJson({'id': 501, 'Comments': null}).commentsNewestFirst,
+      isEmpty,
     );
     for (final comments in [
       {},
@@ -58,6 +68,35 @@ void main() {
         throwsFormatException,
       );
     }
+  });
+
+  test('equal instants and undated comments retain their returned order', () {
+    // Deux fuseaux peuvent representer le meme instant; les IDs ne donnent pas la date.
+    final details = TaskDetails.fromJson({
+      'id': 501,
+      'Comments': [
+        {'id': 100, 'content': 'Undated first'},
+        {
+          'id': 2,
+          'content': 'Same instant first',
+          'created_at': '2026-10-07T09:00:00Z',
+        },
+        {
+          'id': 3,
+          'content': 'Same instant second',
+          'created_at': '2026-10-07T11:00:00+02:00',
+        },
+        {'id': 101, 'content': 'Undated second', 'created_at': 'invalid'},
+        {'id': 1, 'content': 'Newest', 'created_at': '2026-10-07T10:00:00Z'},
+      ],
+    });
+    expect(details.commentsNewestFirst.map((comment) => comment.id), [
+      1,
+      2,
+      3,
+      100,
+      101,
+    ]);
   });
 
   test(

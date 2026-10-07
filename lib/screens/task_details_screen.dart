@@ -219,7 +219,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       const SizedBox(height: 14),
       TaskInfoCard(details: details, project: widget.project),
       const SizedBox(height: 14),
-      _buildComment(details.latestComment),
+      _buildComments(details.commentsNewestFirst),
     ];
   }
 
@@ -284,18 +284,32 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     );
   }
 
-  Widget _buildComment(TaskComment? comment) {
-    // Un seul commentaire est affiche: le plus recent parmi ceux retournes par l'API.
+  Widget _buildComments(List<TaskComment> comments) {
+    // Toute la collection retournee reste visible apres l'ajout d'une nouvelle note.
     return _buildPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Latest comment',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Comments',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                '${comments.length}',
+                style: TextStyle(
+                  color: AppColors.of(context).muted,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-          if (comment == null)
+          if (comments.isEmpty)
             Text(
               'No comments available.',
               style: TextStyle(
@@ -304,50 +318,61 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                 height: 1.5,
               ),
             )
-          else ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAvatar(comment.authorName, radius: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        comment.authorName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          height: 1.4,
-                        ),
-                      ),
-                      if (comment.createdAt != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormatter.timestamp(comment.createdAt!),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.of(context).muted,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+          else
+            for (var index = 0; index < comments.length; index++) ...[
+              if (index > 0) ...[
+                const SizedBox(height: 18),
+                Divider(height: 1, color: AppColors.of(context).border),
+                const SizedBox(height: 18),
               ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              comment.content,
-              style: const TextStyle(fontSize: 16, height: 1.6),
-            ),
-          ],
+              _buildComment(comments[index]),
+            ],
         ],
       ),
     );
   }
+
+  Widget _buildComment(TaskComment comment) => Column(
+    key: ValueKey('comment-${comment.id}'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildAvatar(comment.authorName, radius: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  comment.authorName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    height: 1.4,
+                  ),
+                ),
+                if (comment.createdAt != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormatter.timestamp(comment.createdAt!),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.of(context).muted,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      Text(comment.content, style: const TextStyle(fontSize: 16, height: 1.6)),
+    ],
+  );
 
   Widget _buildAvatar(String name, {required double radius}) {
     // Assignees et auteur du commentaire partagent le meme avatar a initiale.

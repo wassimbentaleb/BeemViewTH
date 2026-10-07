@@ -23,19 +23,21 @@ class TaskDetails {
   final DateTime? updatedAt;
   final List<TaskComment> comments;
 
-  TaskComment? get latestComment {
-    // Les reponses ne sont pas supposees triees: on compare les instants disponibles.
-    TaskComment? latest;
-    for (final comment in comments) {
-      final date = comment.createdAt;
-      if (latest == null ||
-          (date != null &&
-              (latest.createdAt == null || date.isAfter(latest.createdAt!)))) {
-        latest = comment;
+  List<TaskComment> get commentsNewestFirst {
+    // La date trie les commentaires; l'index conserve l'ordre des dates egales/absentes.
+    final entries = comments.indexed.toList();
+    entries.sort((a, b) {
+      final firstDate = a.$2.createdAt;
+      final secondDate = b.$2.createdAt;
+      if (firstDate == null && secondDate != null) return 1;
+      if (firstDate != null && secondDate == null) return -1;
+      if (firstDate != null && secondDate != null) {
+        final order = secondDate.compareTo(firstDate);
+        if (order != 0) return order;
       }
-    }
-    // Sans aucune date utilisable, on conserve le premier commentaire retourne.
-    return latest;
+      return a.$1.compareTo(b.$1);
+    });
+    return List.unmodifiable(entries.map((entry) => entry.$2));
   }
 
   factory TaskDetails.fromJson(Map<String, dynamic> json) {

@@ -183,6 +183,11 @@ void main() {
               'Ready for a detailed inspection of the construction site.',
           'user': {'name': 'A comment author with a long display name'},
         },
+        {
+          'id': 78,
+          'content':
+              'An earlier note remains readable below the latest comment.',
+        },
       ];
       final auth = createDetailSession(
         (request) async => http.Response(jsonEncode(data), 200),
@@ -193,15 +198,19 @@ void main() {
       await tester.ensureVisible(
         find.text('Ready for a detailed inspection of the construction site.'),
       );
+      await tester.ensureVisible(
+        find.text('An earlier note remains readable below the latest comment.'),
+      );
+      expect(find.text('Unknown user'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },
   );
 
   testWidgets(
-    'latest returned comment shows its content author and timestamp only',
+    'every returned comment shows its content author and timestamp newest first',
     (tester) async {
-      // L'ecran ne montre pas un ancien commentaire juste parce qu'il arrive en premier.
+      // L'ordre de l'API ne cache aucun commentaire et le plus recent est en premier.
       final data = jsonDecode(detailResponse) as Map<String, dynamic>;
       data['task']['Comments'] = [
         {
@@ -228,8 +237,21 @@ void main() {
         find.text(DateFormatter.timestamp(DateTime.utc(2026, 10, 6, 9))),
         findsOneWidget,
       );
-      expect(find.text('Older comment'), findsNothing);
-      expect(find.text('Older user'), findsNothing);
+      expect(find.text('Comments'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(const ValueKey('comment-77'))).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const ValueKey('comment-90'))).dy,
+        ),
+      );
+      await tester.ensureVisible(find.text('Older comment'));
+      expect(find.text('Older comment').hitTestable(), findsOneWidget);
+      expect(find.text('Older user'), findsOneWidget);
+      expect(
+        find.text(DateFormatter.timestamp(DateTime.utc(2026, 10, 5, 9))),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },
@@ -306,6 +328,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No description provided.'), findsOneWidget);
     expect(find.text('No comments available.'), findsOneWidget);
+    expect(find.text('Comments'), findsOneWidget);
+    expect(find.text('0'), findsOneWidget);
     expect(find.text('Interview project'), findsOneWidget);
     expect(find.text('Unassigned'), findsOneWidget);
     expect(find.text('No start date'), findsOneWidget);
