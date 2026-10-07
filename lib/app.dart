@@ -34,10 +34,13 @@ class _BeemViewAppState extends State<BeemViewApp> {
   late final ProjectService _projects;
   late final TaskService _tasks;
   ApiClient? _client;
+  bool _holdingStartupFrame = true;
 
   @override
   void initState() {
     super.initState();
+    // Garde le splash natif jusqu'a ce que la destination initiale soit connue.
+    WidgetsBinding.instance.deferFirstFrame();
     _theme = widget.themeController ?? ThemeController();
     if (widget.themeController == null) unawaited(_theme.restore());
     // En execution normale, l'app possede une seule session et un seul client.
@@ -55,12 +58,31 @@ class _BeemViewAppState extends State<BeemViewApp> {
     _projects = ProjectService(client: _auth.service.client);
     // Tasks reutilise aussi le token et le traitement commun de l'expiration.
     _tasks = TaskService(client: _auth.service.client);
-    // Le controller gere les erreurs; l'ecran attend son resultat.
-    unawaited(_auth.restoreSession());
+    unawaited(_restoreStartupSession());
+  }
+
+  Future<void> _restoreStartupSession() async {
+    try {
+      await _auth.restoreSession();
+    } finally {
+      if (mounted) {
+        setState(_releaseStartupFrame);
+      } else {
+        _releaseStartupFrame();
+      }
+    }
+  }
+
+  void _releaseStartupFrame() {
+    if (!_holdingStartupFrame) return;
+    _holdingStartupFrame = false;
+    WidgetsBinding.instance.allowFirstFrame();
   }
 
   @override
   void dispose() {
+    // Termine aussi l'attente si l'app est retiree pendant la lecture.
+    _releaseStartupFrame();
     if (widget.themeController == null) _theme.dispose();
     // L'app libere seulement les dependances qu'elle a creees.
     if (widget.authController == null) {
@@ -79,7 +101,10 @@ class _BeemViewAppState extends State<BeemViewApp> {
         listenable: Listenable.merge([_auth, _theme]),
         builder: (context, child) {
           final Widget home;
-          if (_auth.isRestoring || _auth.restoreFailed) {
+          if (_holdingStartupFrame) {
+            // Aucune page intermediaire n'est rendue sous le splash natif.
+            home = const SizedBox.shrink();
+          } else if (_auth.isRestoring || _auth.restoreFailed) {
             home = SessionScreen(controller: _auth);
           } else if (_auth.user != null) {
             home = ProjectsScreen(
