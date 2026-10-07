@@ -8,13 +8,25 @@ BeemView API.
 - Login with email/password validation on leaving a field or submitting,
   loading and readable API errors.
 - Secure token storage, session restoration and local sign-out.
-- Projects with pagination and a Load more action.
+- Projects loaded five at a time with pagination and a Load more action.
 - Project tasks with name search and all eight status filters applied locally.
 - Task details with description, project, assignees, start/due dates and latest returned comment.
 - Status update with an optional note posted as a separate comment.
 - Light and dark themes with a sun/moon button on every screen. The app follows
   the device theme until a preference is chosen, then remembers it across restarts
   and sign-out.
+- Compact headers with the original logo, rounded cards, clearer task status and
+  quieter priority/date metadata. Five short project cards and Load more fit on
+  the connected phone's 360 x 802 viewport; four task cards fit on that screen.
+  Longer text and smaller screens remain scrollable. Folder icons use the soft
+  gradients and light tab from the mockup; task metadata uses calendar grids,
+  filled priority flags and a dotted In progress symbol.
+- Login follows the supplied reference with the original logo, a soft gradient,
+  decorative shapes, a circular theme button and a compact form. Navy surfaces in dark mode,
+  and a task-information card with prominent project/assignees and two date tiles.
+  Date tiles stack on narrow layouts or with enlarged text.
+- Brief fade/slide entrances, animated theme toggles and four-card loading
+  placeholders. Custom entrances and theme transitions respect reduced motion.
 
 Loading, empty results and failed reads have dedicated states. A protected 401
 returns to Login; 403 preserves the session. A delayed 401 for an old token does
@@ -95,7 +107,7 @@ Protected requests use `Authorization: Bearer <token>`; JSON bodies use
 | --- | --- | --- |
 | POST | `/api/auth/login` | Email, password and configured subdomain. |
 | GET | `/api/users/me/profile` | Validate the restored session. |
-| GET | `/api/projects?limit=10&offset=0` | Paginated visible projects. |
+| GET | `/api/projects?limit=5&offset=0` | Paginated visible projects. |
 | GET | `/api/tasks/project/:projectId` | Complete task collection for a project. |
 | GET | `/api/tasks/:id` | Current task details. |
 | PUT | `/api/tasks/:id` | Send only the selected `status`. |
@@ -131,13 +143,23 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All **103 tests** pass; formatting and analysis report no issues. Tests cover
+All **108 tests** pass; formatting and analysis report no issues. Tests cover
 response mapping, pagination, filters, session storage/expiry, delayed old-token
 401s, duplicate reads/saves, late responses, partial saves, uncertain comments,
 refresh and preserved filters, and narrow layouts with enlarged text and a keyboard.
 Theme tests cover device brightness, saved preferences, sign-out, preserved form
 and navigation state, and unavailable preference storage.
+Design tests check five projects plus Load more and four tasks on the connected
+phone's viewport in both themes, side-by-side and stacked
+dates, all assignees with enlarged text, and immediate content with reduced motion.
 HTTP/storage are simulated in automated tests.
+
+To regenerate actual widget screenshots of Login, Projects, Tasks, Details and
+Update status in both themes with the bundled font and logo:
+
+```sh
+flutter test test/design_layout_test.dart --dart-define=DESIGN_PREVIEW_DIR=build/design-preview
+```
 
 The real API was checked on Android for login, session restoration, projects,
 tasks, details and status saving. The assigned task was changed from To do to
