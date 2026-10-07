@@ -56,15 +56,15 @@ void main() {
                 'id': 501,
                 'name': 'Site inspection',
                 'status': 'to_do',
-                'Comments': added
-                    ? [
-                        {
-                          'id': 99,
-                          'content': 'Saved despite lost response',
-                          'user': {'name': 'Candidate'},
-                        },
-                      ]
-                    : [],
+                'Comments': [
+                  {'id': 90, 'content': 'Previously saved note'},
+                  if (added)
+                    {
+                      'id': 99,
+                      'content': 'Saved despite lost response',
+                      'user': {'name': 'Candidate'},
+                    },
+                ],
               },
             }),
             200,
@@ -92,12 +92,106 @@ void main() {
       await tester.tap(find.text('Check task details'));
       await tester.pumpAndSettle();
       expect(find.text('Saved despite lost response'), findsOneWidget);
+      expect(find.text('Previously saved note'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
       expect(detailReads, 2);
       expect(methods, ['PUT', 'POST']);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  testWidgets('two saved comments appear together with the previous history', (
+    tester,
+  ) async {
+    // Chaque POST est suivi d'un GET; l'affichage doit conserver toutes les notes.
+    var detailReads = 0;
+    var commentWrites = 0;
+    final methods = <String>[];
+    final comments = <Map<String, dynamic>>[
+      {
+        'id': 11,
+        'content': 'Existing project note',
+        'created_at': '2026-10-07T07:00:00Z',
+        'user': {'name': 'Colleague'},
+      },
+    ];
+    final auth = createController(
+      (_) async => http.Response(
+        '{"data":[{"id":102,"name":"Interview project"}],"total":1}',
+        200,
+      ),
+      tasks: (_) async => http.Response(
+        '{"tasks":[{"id":501,"name":"Site inspection","status":"to_do"}]}',
+        200,
+      ),
+      details: (_) async {
+        detailReads++;
+        return http.Response(
+          jsonEncode({
+            'task': {
+              'id': 501,
+              'name': 'Site inspection',
+              'status': 'to_do',
+              'Comments': comments,
+            },
+          }),
+          200,
+        );
+      },
+      writes: (request) async {
+        methods.add(request.method);
+        if (request.method == 'POST') {
+          expect(request.url.path, '/api/tasks/comment');
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(body['task_id'], 501);
+          commentWrites++;
+          comments.add({
+            'id': 100 + commentWrites,
+            'content': body['content'],
+            'created_at': DateTime.utc(
+              2026,
+              10,
+              7,
+              9,
+              commentWrites,
+            ).toIso8601String(),
+            'user': {'name': 'Candidate'},
+          });
+          return http.Response('{}', 201);
+        }
+        expect(request.url.path, '/api/tasks/501');
+        return http.Response('{}', 200);
+      },
+    );
+    await openTask(tester, auth);
+    for (final note in ['First added note', 'Second added note']) {
+      await tester.tap(find.text('Update status'));
+      await tester.pumpAndSettle();
+      final field = find.byKey(const ValueKey('status-note'));
+      await tester.ensureVisible(field);
+      await tester.enterText(field, note);
+      await tester.tap(find.text('Save status'));
+      await tester.pumpAndSettle();
+      expect(find.byType(UpdateStatusScreen), findsNothing);
+      expect(find.text(note), findsOneWidget);
+      expect(find.text('Existing project note'), findsOneWidget);
+      await tester.ensureVisible(find.text(note));
+      expect(find.text(note).hitTestable(), findsOneWidget);
+    }
+    expect(find.text('First added note'), findsOneWidget);
+    expect(find.text('Second added note'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('comment-102'))).dy,
+      lessThan(tester.getTopLeft(find.byKey(const ValueKey('comment-101'))).dy),
+    );
+    expect(detailReads, 3);
+    expect(commentWrites, 2);
+    expect(methods, ['PUT', 'POST', 'PUT', 'POST']);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'session expiry during the comment clears all routes after saved status',
