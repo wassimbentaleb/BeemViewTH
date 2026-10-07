@@ -25,8 +25,16 @@ BeemView API.
   decorative shapes, a circular theme button and a compact form. Navy surfaces in dark mode,
   and a task-information card with prominent project/assignees and two date tiles.
   Date tiles stack on narrow layouts or with enlarged text.
-- Brief fade/slide entrances, animated theme toggles and four-card loading
-  placeholders. Custom entrances and theme transitions respect reduced motion.
+- Staggered 12px fade/slide entrances take 200–300 ms and start once the incoming
+  page is visible. Buttons and tappable cards shrink 4% with a 100 ms press and
+  180 ms release; status filters transition in 220 ms and search results fade
+  in 180 ms, keeping only the current results interactive.
+- Skeleton cards cover project, task, detail and session reads. A small check
+  draws in 240 ms after a completely confirmed save, then returns to Details.
+  Partial or uncertain saves retain their existing recovery actions.
+- Light/dark transitions take 240 ms. Custom motion, filter transitions and
+  scrolling to save errors respect reduced motion; a confirmed save returns
+  immediately when that preference is enabled.
 
 Loading, empty results and failed reads have dedicated states. A protected 401
 returns to Login; 403 preserves the session. A delayed 401 for an old token does
@@ -143,7 +151,7 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All **108 tests** pass; formatting and analysis report no issues. Tests cover
+All **115 tests** pass; formatting and analysis report no issues. Tests cover
 response mapping, pagination, filters, session storage/expiry, delayed old-token
 401s, duplicate reads/saves, late responses, partial saves, uncertain comments,
 refresh and preserved filters, and narrow layouts with enlarged text and a keyboard.
@@ -153,6 +161,11 @@ Design tests check five projects plus Load more and four tasks on the connected
 phone's viewport in both themes, side-by-side and stacked
 dates, all assignees with enlarged text, and immediate content with reduced motion.
 HTTP/storage are simulated in automated tests.
+
+Motion tests cover staggered entrances timed to page transitions, quick press
+feedback, button activation/cancellation without
+changing the tap target, rapid search/filter changes, confirmed-save feedback,
+and reduced motion enabled before or during an animation.
 
 To regenerate actual widget screenshots of Login, Projects, Tasks, Details and
 Update status in both themes with the bundled font and logo:
