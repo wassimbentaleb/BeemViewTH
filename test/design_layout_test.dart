@@ -248,6 +248,12 @@ void main() {
       ),
     );
     expect(find.text('Immediately visible'), findsOneWidget);
-    expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(AppEntrance),
+        matching: find.byType(Opacity),
+      ),
+      findsNothing,
+    );
   });
 }

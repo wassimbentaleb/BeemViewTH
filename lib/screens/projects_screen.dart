@@ -8,6 +8,7 @@ import '../core/app_theme.dart';
 import '../models/project.dart';
 import '../services/project_service.dart';
 import '../services/task_service.dart';
+import '../widgets/app_motion.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/project_card.dart';
@@ -231,29 +232,35 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           )
         else if (_projects.hasMore) ...[
           const SizedBox(height: 4),
-          OutlinedButton.icon(
-            onPressed: _projects.isLoadingMore ? null : _projects.loadMore,
-            iconAlignment: IconAlignment.end,
-            icon: _projects.isLoadingMore
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.arrow_forward_rounded),
-            label: Text(_projects.isLoadingMore ? 'Loading...' : 'Load more'),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-              foregroundColor: AppColors.of(context).primary,
-              side: BorderSide(color: AppColors.of(context).primary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              textStyle: const TextStyle(
-                fontFamily: 'PlusJakartaSans',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+          AppPressScale(
+            enabled: !_projects.isLoadingMore,
+            child: OutlinedButton.icon(
+              onPressed: _projects.isLoadingMore ? null : _projects.loadMore,
+              iconAlignment: IconAlignment.end,
+              icon: _projects.isLoadingMore
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.arrow_forward_rounded),
+              label: Text(_projects.isLoadingMore ? 'Loading...' : 'Load more'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 20,
+                ),
+                foregroundColor: AppColors.of(context).primary,
+                side: BorderSide(color: AppColors.of(context).primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontFamily: 'PlusJakartaSans',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -291,10 +298,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: Text(actionLabel),
+          AppPressScale(
+            child: FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(actionLabel),
+            ),
           ),
         ],
       ),

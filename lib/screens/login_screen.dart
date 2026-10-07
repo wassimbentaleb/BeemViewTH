@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../controllers/auth_controller.dart';
 import '../core/app_theme.dart';
 import '../core/validators.dart';
+import '../widgets/app_motion.dart';
 import '../widgets/app_surface.dart';
 import '../widgets/brand_logo.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -271,51 +272,54 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                 ],
                 // Le degrade fait partie du bouton tout en gardant le retour Material.
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: LinearGradient(
-                      colors: light
-                          ? const [Color(0xFF00A7D3), Color(0xFF00ADD5)]
-                          : [colors.primary, colors.primary],
-                    ),
-                  ),
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      foregroundColor: colors.onPrimary,
-                      minimumSize: const Size(double.infinity, 48),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      textStyle: const TextStyle(
-                        fontFamily: 'PlusJakartaSans',
-                        fontSize: 16,
-                        height: 1.4,
-                        fontWeight: FontWeight.w600,
+                AppPressScale(
+                  enabled: !widget.controller.isLoading,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: light
+                            ? const [Color(0xFF00A7D3), Color(0xFF00ADD5)]
+                            : [colors.primary, colors.primary],
                       ),
                     ),
-                    onPressed: widget.controller.isLoading ? null : _submit,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (widget.controller.isLoading)
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: colors.onPrimary,
-                            ),
-                          )
-                        else ...[
-                          const Text('Sign in'),
-                          const SizedBox(width: 10),
-                          const Icon(Icons.arrow_forward_rounded, size: 20),
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        foregroundColor: colors.onPrimary,
+                        minimumSize: const Size(double.infinity, 48),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        textStyle: const TextStyle(
+                          fontFamily: 'PlusJakartaSans',
+                          fontSize: 16,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: widget.controller.isLoading ? null : _submit,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (widget.controller.isLoading)
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colors.onPrimary,
+                              ),
+                            )
+                          else ...[
+                            const Text('Sign in'),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.arrow_forward_rounded, size: 20),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
