@@ -5,21 +5,38 @@ BeemView API.
 
 ## Features
 
-- Native Android and iOS launch screens center the original BeemView logo on a
-  light or navy background matching the device appearance. Android 12+ has a
-  padded icon to keep all four logo corners visible inside its
+- Native Android and iOS launch screens show the original logo above a
+  cyan/orange **BeemView360** wordmark on a light or navy background matching
+  the device appearance. Android 12+ has a padded composition to keep the
+  logo and name visible inside its
   [system mask](https://developer.android.com/develop/ui/views/launch/splash-screen#dimensions).
-  Startup has no added delay. On Windows, `tool/generate_splash_assets.ps1`
-  regenerates the native assets from the original PNG without changing its pixels.
+  The native splash stays visible while the saved session is checked, then opens
+  Login or Projects directly, without an intermediate restoration page or a timer.
+  A failed session check still offers Retry or Sign in. On Windows,
+  `tool/generate_splash_assets.ps1`
+  regenerates the native assets from the original PNG and bundled font, preserving
+  the logo pixels and checking that all visible pixels fit the Android 12 mask.
 - Login with email/password validation on leaving a field or submitting,
-  loading and readable API errors.
+  loading and readable API errors. The empty password field has no placeholder
+  dots; its visibility toggle appears only after text is entered and clearing
+  the field restores password masking.
 - Secure token storage, session restoration and local sign-out. The account
   avatar opens a sheet with the current name/email and Cancel/Sign out actions.
   Signing out locks dismissal and duplicate submissions until local storage is
   cleared; a failure preserves the session and offers an inline retry.
 - Projects loaded five at a time with pagination and a Load more action.
 - Project tasks with name search and all eight status filters applied locally.
-- Task details with description, project, assignees, start/due dates and latest returned comment.
+- Task cards keep priority on the left and a simple muted countdown on the right,
+  without a colored background or border. It uses one complete calendar-month,
+  week or day unit: `Expires: 5 months` for future dates and `Expired: 1 day` for
+  past dates, including Done/Canceled tasks. A 300 ms pulse reminds about active
+  deadlines in 0–4 days every 12 seconds, with an initial 600 ms wait for the card
+  entrance. It stops on
+  covered routes, in the background and with reduced motion. Countdown values
+  refresh at local midnight and on resume; the exact date remains available on
+  long press and in Details.
+- Task details with description, project, assignees, start/due dates and every
+  returned comment, newest first, with author, timestamp and a comment count.
 - Status update with an optional note posted as a separate comment.
 - Light and dark themes with a sun/moon button on every screen. The app follows
   the device theme until a preference is chosen, then remembers it across restarts
@@ -138,8 +155,9 @@ Protected requests use `Authorization: Bearer <token>`; JSON bodies use
   endpoint has no pagination; server-side task filtering is not used.
 - Missing optional fields remain empty. Unknown status labels stay readable;
   saving requires one of the eight documented API values.
-- Details returns up to ten recent comments. The newest usable timestamp chooses
-  the displayed comment; if none are usable, the first returned comment is used.
+- Details returns up to ten recent comments, all displayed after each refresh.
+  Usable timestamps sort newest first; equal timestamps and undated comments
+  keep their returned order. The contract has no separate comment-history route.
 - Status and comment are separate writes. A timeout, connection loss, 5xx or
   unusable acknowledgement may follow an applied write. The user checks Details
   before deciding whether to send another note; the app performs no automatic retries.
@@ -160,7 +178,7 @@ flutter test
 flutter build apk --debug --dart-define-from-file=config/app.local.json
 ```
 
-All **120 tests** pass; formatting and analysis report no issues. Tests cover
+All **140 tests** pass; formatting and analysis report no issues. Tests cover
 response mapping, pagination, filters, session storage/expiry, delayed old-token
 401s, duplicate reads/saves, late responses, partial saves, uncertain comments,
 refresh and preserved filters, and narrow layouts with enlarged text and a keyboard.
@@ -170,6 +188,18 @@ Design tests check five projects plus Load more and four tasks on the connected
 phone's viewport in both themes, side-by-side and stacked
 dates, all assignees with enlarged text, and immediate content with reduced motion.
 HTTP/storage are simulated in automated tests.
+
+Startup tests verify that no intermediate screen is rendered while reading the
+saved token or checking the profile. They cover direct Login/Projects entry,
+expired tokens, a failed profile check with retry, and disposal during startup.
+
+Comment regressions cover the full returned list, stable timestamp ordering,
+missing metadata, two successive additions that preserve earlier notes, and
+verification of an applied comment after its response is lost.
+
+Countdown tests cover calendar-month boundaries, leap years, urgency thresholds,
+missing/closed/overdue deadlines, narrow layouts, both themes, accessible exact
+dates, and pausing/restarting attention on covered routes or inactive apps.
 
 Sign-out tests cover cancellation, outside dismissal, duplicate taps, blocked
 Back during deletion, storage failures with retry, and light/dark layouts with
