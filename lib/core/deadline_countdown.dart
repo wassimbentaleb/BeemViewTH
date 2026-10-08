@@ -34,7 +34,7 @@ class DeadlineCountdown {
             <= 14 => DeadlineUrgency.upcoming,
             _ => DeadlineUrgency.relaxed,
           };
-    if (days == 0) return DeadlineCountdown._('Expires: Today', days, urgency);
+    if (days == 0) return DeadlineCountdown._('Due today', days, urgency);
 
     final earlier = days > 0 ? today : due;
     final later = days > 0 ? due : today;
@@ -57,7 +57,7 @@ class DeadlineCountdown {
         ? (magnitude ~/ 7, 'week')
         : (magnitude, 'day');
     final period = '$amount $unit${amount == 1 ? '' : 's'}';
-    final label = '${days > 0 ? 'Expires' : 'Expired'}: $period';
+    final label = days > 0 ? 'Due in $period' : 'Expired: $period';
     return DeadlineCountdown._(label, days, urgency);
   }
 }

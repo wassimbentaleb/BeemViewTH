@@ -6,14 +6,14 @@ void main() {
 
   test('countdown uses one complete month, week or day unit', () {
     for (final (date, label) in [
-      (DateTime(2027, 3, 7), 'Expires: 5 months'),
-      (DateTime(2026, 11, 7), 'Expires: 1 month'),
-      (DateTime(2026, 10, 28), 'Expires: 3 weeks'),
-      (DateTime(2026, 10, 14), 'Expires: 1 week'),
-      (DateTime(2026, 10, 13), 'Expires: 6 days'),
-      (DateTime(2026, 10, 11), 'Expires: 4 days'),
-      (DateTime(2026, 10, 8), 'Expires: 1 day'),
-      (DateTime(2026, 10, 7), 'Expires: Today'),
+      (DateTime(2027, 3, 7), 'Due in 5 months'),
+      (DateTime(2026, 11, 7), 'Due in 1 month'),
+      (DateTime(2026, 10, 28), 'Due in 3 weeks'),
+      (DateTime(2026, 10, 14), 'Due in 1 week'),
+      (DateTime(2026, 10, 13), 'Due in 6 days'),
+      (DateTime(2026, 10, 11), 'Due in 4 days'),
+      (DateTime(2026, 10, 8), 'Due in 1 day'),
+      (DateTime(2026, 10, 7), 'Due today'),
     ]) {
       expect(DeadlineCountdown.at(date, now: today).label, label);
     }
@@ -47,7 +47,7 @@ void main() {
       (DateTime(2026, 12, 31), DateTime(2027, 2, 28), '2 months'),
       (DateTime(2026, 10, 7), DateTime(2027, 10, 7), '12 months'),
     ]) {
-      expect(DeadlineCountdown.at(end, now: start).label, 'Expires: $label');
+      expect(DeadlineCountdown.at(end, now: start).label, 'Due in $label');
     }
   });
 
@@ -57,7 +57,7 @@ void main() {
       now: DateTime(2026, 10, 7, 23, 59, 59),
     );
     expect(countdown.days, 1);
-    expect(countdown.label, 'Expires: 1 day');
+    expect(countdown.label, 'Due in 1 day');
     expect(
       DeadlineCountdown.at(
         DateTime.utc(2026, 11, 1),

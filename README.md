@@ -28,7 +28,7 @@ BeemView API.
 - Project tasks with name search and all eight status filters applied locally.
 - Task cards keep priority on the left and a simple muted countdown on the right,
   without a colored background or border. It uses one complete calendar-month,
-  week or day unit: `Expires: 5 months` for future dates and `Expired: 1 day` for
+  week or day unit: `Due in 5 months` for future dates and `Expired: 1 day` for
   past dates, including Done/Canceled tasks. A 300 ms pulse reminds about active
   deadlines in 0–4 days every 12 seconds, with an initial 600 ms wait for the card
   entrance. It stops on

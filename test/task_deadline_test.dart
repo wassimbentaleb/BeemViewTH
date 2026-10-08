@@ -91,7 +91,7 @@ void main() {
     'near deadline pulses briefly then rests; reduced motion stops it',
     (tester) async {
       await tester.pumpWidget(deadlineApp(deadlineTask(4)));
-      expect(find.text('Expires: 4 days'), findsOneWidget);
+      expect(find.text('Due in 4 days'), findsOneWidget);
       expect(deadlineScale(tester), 1);
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump(const Duration(milliseconds: 150));
@@ -133,12 +133,12 @@ void main() {
       final semantics = tester.ensureSemantics();
       try {
         await tester.pumpWidget(deadlineApp(task));
-        expect(find.text('Expires: 5 days'), findsOneWidget);
+        expect(find.text('Due in 5 days'), findsOneWidget);
         await tester.pumpWidget(deadlineApp(task, now: DateTime(2026, 10, 8)));
-        expect(find.text('Expires: 4 days'), findsOneWidget);
+        expect(find.text('Due in 4 days'), findsOneWidget);
         expect(find.byTooltip('Oct 12, 2026'), findsOneWidget);
         expect(
-          find.bySemanticsLabel('Expires: 4 days. Due date Oct 12, 2026'),
+          find.bySemanticsLabel('Due in 4 days. Due date Oct 12, 2026'),
           findsOneWidget,
         );
         await tester.pump(const Duration(milliseconds: 600));
